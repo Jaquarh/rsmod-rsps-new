@@ -29,7 +29,7 @@ suspend fun dialog(it: QueueTask) {
     it.chatNpc("Good day! Welcome to ${world.gameContext.name}. I'm your guide for today.", animation = 568, npc = npcId, title = "${world.gameContext.name} Guide")
     it.chatNpc("Would you like to take a tour?", animation = 554, npc = npcId, title = "${world.gameContext.name} Guide")
 
-    when (it.options("Yes. A tour would be good.", "No. I am an experienced player.")) {
+    when (it.options("Yes. I can spare 2 minutes of time.", "No. I am an experienced player.")) {
         1 -> {
             tour(it)
             if(startItems)
