@@ -1,5 +1,4 @@
 import gg.rsmod.game.model.attr.NEW_ACCOUNT_ATTR
-import gg.rsmod.plugins.content.magic.teleport
 
 /**
  * @author Kye <okaydots@gmail.com>
