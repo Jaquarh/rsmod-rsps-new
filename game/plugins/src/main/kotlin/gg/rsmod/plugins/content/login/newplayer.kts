@@ -34,10 +34,12 @@ suspend fun dialog(it: QueueTask) {
             tour(it)
             if(startItems)
                 startItems(it)
+            it.chatNpc("If you need any help whilst playing feel free to come and chat to me again!<br>Good luck on your travels, stranger!", animation = 568, npc = npcId, title = "${world.gameContext.name} Guide")
         }
         2 -> {
             if(startItems)
                 startItems(it)
+            it.chatNpc("If you need any help whilst playing feel free to come and chat to me again!<br>Good luck on your travels, stranger!", animation = 568, npc = npcId, title = "${world.gameContext.name} Guide")
         }
     }
 }
@@ -77,6 +79,4 @@ suspend fun startItems(it: QueueTask) {
             it.player.inventory.add(item)
             it.chatNpc("I have rewarded you ${item.amount} ${item.getName(world.definitions)}.", animation = 568, npc = npcId, title = "${world.gameContext.name} Guide")
     }
-
-    it.chatNpc("If you need any help whilst playing feel free to come and chat to me again!<br>Good luck on your travels, stranger!", animation = 568, npc = npcId, title = "${world.gameContext.name} Guide")
 }
