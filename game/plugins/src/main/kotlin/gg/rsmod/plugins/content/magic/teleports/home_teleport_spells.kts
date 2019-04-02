@@ -77,8 +77,8 @@ enum class HomeTeleport(val spellName: String, val endTile: World.() -> Tile) {
     LUMBRIDGE("Lumbridge Home Teleport", { gameContext.home }),
     EDGEVILLE("Edgeville Home Teleport", { gameContext.home }),
     LUNAR("Lunar Home Teleport", { gameContext.home }),
-    ARCEUUS("Arceuus Home Teleport", { gameContext.home })
-    ;
+    ARCEUUS("Arceuus Home Teleport", { gameContext.home });
+
 
     companion object {
         val values = enumValues<HomeTeleport>()

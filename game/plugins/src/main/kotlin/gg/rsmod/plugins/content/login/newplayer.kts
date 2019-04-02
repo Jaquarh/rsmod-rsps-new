@@ -44,6 +44,7 @@ suspend fun dialog(it: QueueTask) {
 }
 
 suspend fun tour(it: QueueTask) {
+    it.player.lock()
     it.chatNpc("${world.gameContext.name} is a PvM and PvP dedicated server.", animation = 568, npc = npcId, title = "${world.gameContext.name} Guide")
     it.chatNpc("Making money is simple. You can raid bosses, or, choose to raid players.", animation = 569, npc = npcId, title = "${world.gameContext.name} Guide")
     it.chatPlayer("And where can I start?", animation = 554)
@@ -61,13 +62,14 @@ suspend fun tour(it: QueueTask) {
     it.chatNpc("Yes! You can find all of the trainers here: Goblins and Cows are also Lvl 2.", animation = 568, npc = npcId, title = "${world.gameContext.name} Guide")
 
     /** Duel Arena **/
-    it.player.moveTo(3360 ,3213 , 0)
+    it.player.moveTo(3376 ,3271 , 0)
     it.chatNpc("Finally, Mini-Games. Welcome to the Duel Arena!", animation = 569, npc = npcId, title = "${world.gameContext.name} Guide")
     it.chatPlayer("Do I keep my items on death?", animation = 554)
     it.chatNpc("You can stake your items on a player duel which will be lost if you die.<br>All unstaked items will be kept on death.", animation = 568, npc = npcId, title = "${world.gameContext.name} Guide")
 
     /** Move Back Home **/
     it.player.moveTo(3087, 3497, 0)
+    it.player.unlock()
 }
 
 suspend fun startItems(it: QueueTask) {

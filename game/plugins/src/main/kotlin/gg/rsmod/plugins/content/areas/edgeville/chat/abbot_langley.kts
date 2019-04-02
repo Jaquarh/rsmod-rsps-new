@@ -1,5 +1,10 @@
 package gg.rsmod.plugins.content.areas.edgeville.chat
 
+import gg.rsmod.game.model.queue.QueueTask
+import gg.rsmod.plugins.api.ext.chatNpc
+import gg.rsmod.plugins.api.ext.chatPlayer
+import gg.rsmod.plugins.api.ext.options
+
 on_npc_option(npc = Npcs.ABBOT_LANGLEY, option = "talk-to") {
     player.queue { dialog() }
 }
