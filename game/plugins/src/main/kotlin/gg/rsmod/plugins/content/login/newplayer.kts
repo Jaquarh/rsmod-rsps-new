@@ -25,6 +25,7 @@ on_login {
 }
 
 suspend fun dialog(it: QueueTask) {
+    it.player.lock()
     it.chatNpc("Good day! Welcome to ${world.gameContext.name}. I'm your guide for today.", animation = 568, npc = npcId, title = "${world.gameContext.name} Guide")
     it.chatNpc("Would you like to take a tour?", animation = 554, npc = npcId, title = "${world.gameContext.name} Guide")
 
@@ -44,7 +45,6 @@ suspend fun dialog(it: QueueTask) {
 }
 
 suspend fun tour(it: QueueTask) {
-    it.player.lock()
     it.chatNpc("${world.gameContext.name} is a PvE and PvP dedicated server.", animation = 568, npc = npcId, title = "${world.gameContext.name} Guide")
     it.chatNpc("Making money is simple. You can raid bosses, or, choose to raid players.", animation = 569, npc = npcId, title = "${world.gameContext.name} Guide")
     it.chatPlayer("And where can I start?", animation = 554)
@@ -69,7 +69,6 @@ suspend fun tour(it: QueueTask) {
 
     /** Move Back Home **/
     it.player.moveTo(3087, 3497, 0)
-    it.player.unlock()
 }
 
 suspend fun startItems(it: QueueTask) {
@@ -79,5 +78,7 @@ suspend fun startItems(it: QueueTask) {
         item ->
             it.player.inventory.add(item)
             it.chatNpc("I have rewarded you ${item.amount} ${item.getName(world.definitions)}.", animation = 568, npc = npcId, title = "${world.gameContext.name} Guide")
+
     }
+    it.player.unlock()
 }
