@@ -44,6 +44,7 @@ suspend fun dialog(it: QueueTask) {
 }
 
 suspend fun tour(it: QueueTask) {
+    i.player.lock()
     it.chatNpc("${world.gameContext.name} is a PvM and PvP dedicated server.", animation = 568, npc = npcId, title = "${world.gameContext.name} Guide")
     it.chatNpc("Making money is simple. You can raid bosses, or, choose to raid players.", animation = 569, npc = npcId, title = "${world.gameContext.name} Guide")
     it.chatPlayer("And where can I start?", animation = 554)
@@ -68,6 +69,7 @@ suspend fun tour(it: QueueTask) {
 
     /** Move Back Home **/
     it.player.moveTo(3087, 3497, 0)
+    i.player.unlock()
 }
 
 suspend fun startItems(it: QueueTask) {
