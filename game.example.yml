@@ -17,36 +17,28 @@ privileges:
     powers: []
   - id: 1
     icon: 1
-    name: "helper"
-    powers: []
-  - id: 2
-    icon: 1
     name: "moderator"
     powers: ["mod"]
-  - id: 3
+  - id: 2
     icon: 2
     name: "administrator"
     powers: ["mod", "admin"]
-  - id: 4
+  - id: 3
     icon: 2
     name: "owner"
-    powers: ["mod", "dev", "admin", "owner"]
-  - id: 5
-    icon: 2
-    name: "developer"
-    powers: ["mod", "dev", "admin", "owner"]
-  - id: 6
-    icon: 0
-    name: "undercover"
     powers: ["mod", "dev", "admin", "owner"]
 
 # Game services
 # You can pick and choose which services you want to run.
 services:
   - class: gg.rsmod.game.service.serializer.json.JsonPlayerSerializer
+
   - class: gg.rsmod.game.service.xtea.XteaKeyService
+
   - class: gg.rsmod.game.service.game.NpcStatsService
+
   - class: gg.rsmod.game.service.game.ItemMetadataService
+
   - class: gg.rsmod.game.service.game.EntityExamineService
 
   - class: gg.rsmod.game.service.game.DumpEntityIdService
@@ -55,7 +47,15 @@ services:
     dump: false
 
   - class: gg.rsmod.plugins.service.doors.DoorService
+
   - class: gg.rsmod.plugins.service.gates.GateService
+
   - class: gg.rsmod.game.service.rsa.RsaService
+
   - class: gg.rsmod.game.service.GameService
+
   - class: gg.rsmod.game.service.login.LoginService
+
+  - class:  gg.rsmod.plugins.service.worldlist.WorldListService
+    port: 80
+    config-path: "./data/cfg/world.json"

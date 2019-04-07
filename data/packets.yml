@@ -3,6 +3,13 @@
 
 out-packets:
 
+  - message: gg.rsmod.game.message.impl.UpdateRebootTimerMessage
+    type: FIXED
+    opcode: 72
+    structure:
+      - name: cycles
+        type: SHORT
+
   - message: gg.rsmod.game.message.impl.TriggerOnDialogAbortMessage
     type: FIXED
     opcode: 52
@@ -447,6 +454,15 @@ out-packets:
         type: SHORT
 
 in-packets:
+
+  - message: gg.rsmod.game.message.impl.ClickWorldMapMessage
+    type: FIXED
+    opcode: 45
+    length: 4
+    structure:
+      - name: data
+        type: INT
+        order: MIDDLE
 
   - message: gg.rsmod.game.message.impl.OpLocUMessage
     type: FIXED
@@ -1083,30 +1099,43 @@ in-packets:
     length: 13
     structure:
       - name: gender
+        sign: UNSIGNED
         type: BYTE
       - name: appearance0
+        sign: UNSIGNED
         type: BYTE
       - name: appearance1
+        sign: UNSIGNED
         type: BYTE
       - name: appearance2
+        sign: UNSIGNED
         type: BYTE
       - name: appearance3
+        sign: UNSIGNED
         type: BYTE
       - name: appearance4
+        sign: UNSIGNED
         type: BYTE
       - name: appearance5
+        sign: UNSIGNED
         type: BYTE
       - name: appearance6
+        sign: UNSIGNED
         type: BYTE
       - name: color0
+        sign: UNSIGNED
         type: BYTE
       - name: color1
+        sign: UNSIGNED
         type: BYTE
       - name: color2
+        sign: UNSIGNED
         type: BYTE
       - name: color3
+        sign: UNSIGNED
         type: BYTE
       - name: color4
+        sign: UNSIGNED
         type: BYTE
 
   - message: gg.rsmod.game.message.impl.NoTimeoutMessage
@@ -1249,12 +1278,6 @@ in-packets:
   - message: gg.rsmod.game.message.impl.IgnoreMessage # Unknown
     type: VARIABLE_BYTE
     opcode: 43
-    ignore: true
-
-  - message: gg.rsmod.game.message.impl.IgnoreMessage # Unknown
-    type: FIXED
-    opcode: 45
-    length: 4
     ignore: true
 
   - message: gg.rsmod.game.message.impl.IgnoreMessage # TODO: IF1_BUTTON1
