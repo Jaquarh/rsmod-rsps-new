@@ -170,13 +170,9 @@ open class Player(world: World) : Pawn(world) {
      */
     internal val localNpcs = ObjectArrayList<Npc>()
 
-    val looks = intArrayOf(9, 14, 109, 26, 33, 36, 42)
-
-    val lookColors = intArrayOf(0, 3, 2, 0, 0)
+    var appearance = Appearance.DEFAULT
 
     var weight = 0.0
-
-    var gender = Gender.MALE
 
     var skullIcon = -1
 
@@ -194,7 +190,7 @@ open class Player(world: World) : Pawn(world) {
      * Checks if the player is running. We assume that the varp with id of
      * [173] is the running state varp.
      */
-    override fun isRunning(): Boolean = varps[173].state != 0
+    override fun isRunning(): Boolean = varps[173].state != 0 || movementQueue.peekLastStep()?.type == MovementQueue.StepType.FORCED_RUN
 
     override fun getSize(): Int = 1
 
@@ -363,6 +359,10 @@ open class Player(world: World) : Pawn(world) {
             write(RebuildLoginMessage(index, tile, tiles, world.xteaKeyService))
         }
 
+        if (world.rebootTimer != -1) {
+            write(UpdateRebootTimerMessage(world.rebootTimer))
+        }
+
         initiated = true
         world.plugins.executeLogin(this)
     }
@@ -384,7 +384,7 @@ open class Player(world: World) : Pawn(world) {
      * The [Client] implementation overrides this method and will handle saving
      * data for the player and call this super method at the end.
      */
-    protected open fun handleLogout() {
+    internal open fun handleLogout() {
         interruptQueues()
         world.instanceAllocator.logout(this)
         world.plugins.executeLogout(this)

@@ -136,6 +136,12 @@ class Tile {
         return false
     }
 
+    operator fun component1() = x
+
+    operator fun component2() = z
+
+    operator fun component3() = height
+
     companion object {
         /**
          * The total amount of height levels that can be used in the game.
@@ -146,6 +152,13 @@ class Tile {
             val x = ((packed shr 14) and 0x3FF) shl 3
             val z = ((packed shr 3) and 0x7FF) shl 3
             val height = (packed shr 28) and 0x3
+            return Tile(x, z, height)
+        }
+
+        fun from30BitHash(packed: Int): Tile {
+            val x = ((packed shr 14) and 0x3FFF)
+            val z = ((packed) and 0x3FFF)
+            val height = (packed shr 28)
             return Tile(x, z, height)
         }
     }

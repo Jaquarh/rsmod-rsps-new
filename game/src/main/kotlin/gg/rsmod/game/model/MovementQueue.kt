@@ -25,7 +25,9 @@ class MovementQueue(val pawn: Pawn) {
     /**
      * Get the last tile in our [steps] without removing it.
      */
-    fun peekLast(): Tile? = if (steps.isNotEmpty()) steps.peekLast().tile else null
+    fun peekLast(): Tile? = peekLastStep()?.tile
+
+    fun peekLastStep(): Step? = if (steps.isNotEmpty()) steps.peekLast() else null
 
     fun clear() {
         steps.clear()
