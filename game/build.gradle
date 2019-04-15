@@ -18,30 +18,20 @@ dependencies {
 
     runtimeClasspath project(":game:plugins")
 
-    compile group: 'org.jetbrains.kotlin', name: 'kotlin-stdlib-jdk8', version: kotlinVersion
-    compile group: 'org.jetbrains.kotlin', name: 'kotlin-scripting-common', version: kotlinVersion
-    compile group: 'org.jetbrains.kotlin', name: 'kotlin-script-runtime', version: kotlinVersion
-    compile 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.1.0'
+    compile "org.jetbrains.kotlin:kotlin-scripting-common:$kotlinVersion"
+    compile "org.jetbrains.kotlin:kotlin-script-runtime:$kotlinVersion"
+    compile "org.jetbrains.kotlinx:kotlinx-coroutines-core:$kcoroutineVersion"
 
-    compile group: 'org.reflections', name: 'reflections', version: reflectionsVersion
-    compile group: 'commons-io', name: 'commons-io', version: commonsIoVersion
+    compile "org.reflections:reflections:$reflectionsVersion"
+    compile "commons-io:commons-io:$commonsIoVersion"
 
-    compile group: 'org.apache.logging.log4j', name: 'log4j-api', version: log4jVersion
-    compile group: 'org.apache.logging.log4j', name: 'log4j-core', version: log4jVersion
-    compile group: 'org.apache.logging.log4j', name: 'log4j-slf4j-impl', version: log4jVersion
-    compile "io.github.microutils:kotlin-logging:$kotlinLoggingVersion"
+    compile "io.github.classgraph:classgraph:$classGraphVersion"
+    compile "it.unimi.dsi:fastutil:$fastUtilVersion"
 
-    compile group: 'io.github.classgraph', name: 'classgraph', version: classGraphVersion
-    compile group: 'it.unimi.dsi', name: 'fastutil', version: fastUtilVersion
+    implementation "org.mindrot:jbcrypt:$bcryptVersion"
+    implementation "org.bouncycastle:bcprov-jdk15on:$bouncycastleVersion"
 
-    implementation group: 'com.lambdaworks', name: 'scrypt', version: scryptVersion
-    implementation group: 'io.netty', name: 'netty-all', version: nettyVersion
-    implementation group: 'com.google.guava', name: 'guava', version: guavaVersion
-    implementation group: 'org.bouncycastle', name: 'bcprov-jdk15on', version: bouncycastleVersion
-    implementation group: 'com.github.runelite.runelite', name: 'cache', version: runeliteVersion
-
-    testCompile "org.jetbrains.kotlin:kotlin-test-junit:$kotlinVersion"
-    testImplementation group: 'junit', name: 'junit', version: junitVersion
+    testImplementation "junit:junit:$junitVersion"
 }
 
 sourceSets {

@@ -3,9 +3,10 @@ package gg.rsmod.game.message
 import gg.rsmod.game.message.impl.IgnoreMessage
 import gg.rsmod.net.packet.*
 import gg.rsmod.util.ServerProperties
+import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import java.io.File
-import java.util.ArrayList
-import kotlin.collections.LinkedHashMap
+import java.util.*
 import kotlin.collections.set
 
 /**
@@ -19,7 +20,7 @@ class MessageStructureSet {
     /**
      * The [MessageStructure]s stored respectively to their [Class].
      */
-    private val structureClasses = hashMapOf<Class<*>, MessageStructure>()
+    private val structureClasses = Object2ObjectOpenHashMap<Class<*>, MessageStructure>()
 
     /**
      * The [MessageStructure]s stored respectively to their opcode.
@@ -61,7 +62,7 @@ class MessageStructureSet {
 
             if (clazz::class.java != IgnoreMessage::class.java) {
                 val packetStructure = if (values.containsKey("structure")) values["structure"] as ArrayList<*> else null
-                val packetValues = LinkedHashMap<String, MessageValue>()
+                val packetValues = Object2ObjectLinkedOpenHashMap<String, MessageValue>()
                 packetStructure?.forEach { structure ->
                     val structValues = structure as LinkedHashMap<*, *>
                     val name = structValues["name"] as String
@@ -80,7 +81,7 @@ class MessageStructureSet {
                 }
             } else {
                 val messageStructure = MessageStructure(type = packetType, opcodes = packetOpcodes.toIntArray(), length = packetLength,
-                        ignore = ignore, values = LinkedHashMap())
+                        ignore = ignore, values = Object2ObjectLinkedOpenHashMap(0))
                 structureClasses[clazz] = messageStructure
                 if (storeOpcodes) {
                     packetOpcodes.forEach { opcode -> structureOpcodes[opcode] = messageStructure }

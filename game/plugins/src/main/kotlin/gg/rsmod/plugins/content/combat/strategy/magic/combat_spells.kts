@@ -20,10 +20,10 @@ MagicSpells.getCombatSpells().forEach { entry ->
                 player.attr[Combat.CASTING_SPELL] = combatSpell
                 player.attack(npc)
             } else {
-                /**
+                /*
                  * The spell is not defined in [CombatSpell].
                  */
-                if (player.world.devContext.debugMagicSpells) {
+                if (world.devContext.debugMagicSpells) {
                     player.message("Undefined combat spell: [spellId=${requirement.paramItem}, name=${requirement.name}]")
                 }
             }
