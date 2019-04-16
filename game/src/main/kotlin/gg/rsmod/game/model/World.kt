@@ -6,6 +6,8 @@ import gg.rsmod.game.GameContext
 import gg.rsmod.game.Server
 import gg.rsmod.game.fs.DefinitionSet
 import gg.rsmod.game.fs.def.ItemDef
+import gg.rsmod.game.fs.def.NpcDef
+import gg.rsmod.game.fs.def.ObjectDef
 import gg.rsmod.game.message.impl.LogoutFullMessage
 import gg.rsmod.game.message.impl.UpdateRebootTimerMessage
 import gg.rsmod.game.model.collision.CollisionManager
@@ -20,6 +22,7 @@ import gg.rsmod.game.model.priv.PrivilegeSet
 import gg.rsmod.game.model.queue.QueueTask
 import gg.rsmod.game.model.queue.QueueTaskSet
 import gg.rsmod.game.model.queue.TaskPriority
+import gg.rsmod.game.model.queue.impl.WorldQueueTaskSet
 import gg.rsmod.game.model.region.ChunkSet
 import gg.rsmod.game.model.shop.Shop
 import gg.rsmod.game.model.timer.TimerMap
@@ -27,12 +30,11 @@ import gg.rsmod.game.plugin.Plugin
 import gg.rsmod.game.plugin.PluginRepository
 import gg.rsmod.game.service.GameService
 import gg.rsmod.game.service.Service
-import gg.rsmod.game.service.game.EntityExamineService
-import gg.rsmod.game.service.game.NpcStatsService
 import gg.rsmod.game.service.xtea.XteaKeyService
 import gg.rsmod.game.sync.block.UpdateBlockSet
 import gg.rsmod.util.HuffmanCodec
 import gg.rsmod.util.ServerProperties
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import it.unimi.dsi.fastutil.objects.ObjectArrayList
@@ -83,7 +85,7 @@ class World(val server: Server, val gameContext: GameContext, val devContext: De
 
     lateinit var coroutineDispatcher: CoroutineDispatcher
 
-    internal var queues = QueueTaskSet(headPriority = false)
+    internal var queues: QueueTaskSet = WorldQueueTaskSet()
 
     internal val registeredContainers = ObjectOpenHashSet<ContainerKey>()
 
@@ -192,6 +194,8 @@ class World(val server: Server, val gameContext: GameContext, val devContext: De
      * @see TimerMap
      */
     val timers = TimerMap()
+
+    val npcStats = Int2ObjectOpenHashMap<NpcCombatDef>()
 
     /**
      * The multi-combat area [gg.rsmod.game.model.region.Chunk]s.
@@ -548,33 +552,23 @@ class World(val server: Server, val gameContext: GameContext, val devContext: De
     }
 
     fun sendExamine(p: Player, id: Int, type: ExamineEntityType) {
-        val service = getService(EntityExamineService::class.java)
-        if (service != null) {
-            val examine = when (type) {
-                ExamineEntityType.ITEM -> definitions.get(ItemDef::class.java, id).examine
-                ExamineEntityType.NPC -> service.getNpc(id)
-                ExamineEntityType.OBJECT -> service.getObj(id)
-            }
+        val examine = when (type) {
+            ExamineEntityType.ITEM -> definitions.get(ItemDef::class.java, id).examine
+            ExamineEntityType.NPC -> definitions.get(NpcDef::class.java, id).examine
+            ExamineEntityType.OBJECT -> definitions.get(ObjectDef::class.java, id).examine
+        }
 
-            if (examine != null) {
-                val extension = if (devContext.debugExamines) " ($id)" else ""
-                p.message(examine + extension)
-            } else {
-                logger.warn { "No examine info found for entity [$type, $id]" }
-            }
+        if (examine != null) {
+            val extension = if (devContext.debugExamines) " ($id)" else ""
+            p.message(examine + extension)
         } else {
-            logger.warn("No examine service found! Could not send examine message to player: ${p.username}.")
+            logger.warn { "No examine info found for entity [$type, $id]" }
         }
     }
 
     fun setNpcDefaults(npc: Npc) {
-        var combatDef: NpcCombatDef? = null
-
-        getService(NpcStatsService::class.java)?.let { statService ->
-            combatDef = statService.get(npc.id)
-        }
-
-        npc.combatDef = combatDef ?: NpcCombatDef.DEFAULT
+        val combatDef = npcStats[npc.id] ?: NpcCombatDef.DEFAULT
+        npc.combatDef = combatDef
         npc.respawns = npc.combatDef.respawnDelay > 0
         npc.combatDef.bonuses.forEachIndexed { index, bonus -> npc.equipmentBonuses[index] = bonus }
         npc.setCurrentHp(npc.combatDef.hitpoints)

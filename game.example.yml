@@ -2,7 +2,7 @@
 # You want to edit these to fit your game.
 name: "RS Mod Server"
 game-port: 43594
-revision: 178
+revision: 179
 
 # The coordinates for the home location.
 home-x: 3087
@@ -35,11 +35,11 @@ services:
 
   - class: gg.rsmod.game.service.xtea.XteaKeyService
 
-  - class: gg.rsmod.game.service.game.NpcStatsService
-
   - class: gg.rsmod.game.service.game.ItemMetadataService
 
-  - class: gg.rsmod.game.service.game.EntityExamineService
+  - class: gg.rsmod.game.service.game.NpcMetadataService
+
+  - class: gg.rsmod.game.service.game.ObjectMetadataService
 
   - class: gg.rsmod.game.service.game.DumpEntityIdService
     cache-path: "./data/cache/"
@@ -56,6 +56,8 @@ services:
 
   - class: gg.rsmod.game.service.login.LoginService
 
-  - class:  gg.rsmod.plugins.service.worldlist.WorldListService
-    port: 80
-    config-path: "./data/cfg/world.json"
+  - class: gg.rsmod.plugins.service.restapi.RestApiService
+    origin: "*"
+    methods: "GET, POST"
+    headers: "X-PINGOTHER, Content-Type"
+    auth: false
