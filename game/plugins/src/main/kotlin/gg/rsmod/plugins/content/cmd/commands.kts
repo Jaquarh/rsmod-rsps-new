@@ -22,6 +22,15 @@ on_command("reboot") {
     }
 }
 
+on_command("rights") {
+    val args = player.getCommandArgs()
+    tryWithUsage(player, args, "Invalid format! Example of proper command <col=801700>::rights username privilige_id</col>") { values ->
+        val username = values[0]
+        val privId = values[1].toInt()
+        world.players.firstOrNull { p -> p.username.toLowerCase() == username.toLowerCase() }?.privilege?.copy(id = privId)
+    }
+}
+
 on_command("max") {
     val target = player.getCombatTarget() ?: player
     CombatClass.values.forEach { combatClass ->

@@ -6,6 +6,9 @@ dependencies {
     implementation project(':game')
     implementation project(':net')
     implementation project(':util')
+
+    compile 'com.sparkjava:spark-core:2.3'
+    testCompile group: 'junit', name: 'junit', version: '4.+'
 }
 
 dokka {
