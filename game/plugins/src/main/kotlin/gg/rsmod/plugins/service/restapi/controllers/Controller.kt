@@ -22,6 +22,8 @@ abstract class Controller(req: Request, resp: Response, auth: Boolean) {
                 // X-AUTH was not valid or has expired
                 authState = false
             }
+
+            Auth.remove(xAuth)
         }
     }
 

@@ -60,4 +60,4 @@ services:
     origin: "*"
     methods: "GET, POST"
     headers: "X-PINGOTHER, Content-Type"
-    auth: false
+    auth: true

@@ -11,13 +11,6 @@ class OnlinePlayersController(req: Request, resp: Response, auth: Boolean) : Con
     private val auth = auth
 
     override fun init(world: World): JsonArray {
-        if(!super.authState && auth) {
-            val arr = JsonArray()
-            val obj = JsonObject()
-            obj.addProperty("error", "Auth code not supplied or invalid.")
-            arr.add(obj)
-            return arr
-        }
 
         val arr = JsonArray()
         val obj = JsonObject()

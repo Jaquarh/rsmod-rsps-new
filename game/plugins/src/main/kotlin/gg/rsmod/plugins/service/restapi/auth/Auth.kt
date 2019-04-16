@@ -19,6 +19,6 @@ class Auth {
 
         fun auth(bearer: String): Boolean = auths.filter { b -> b == bearer }.firstOrNull() != null
 
-        // fun remove(bearer: String) { auths[auths.indexOf(bearer)] = null }
+        fun remove(bearer: String) { auths.remove(bearer) }
     }
 }
