@@ -9,7 +9,7 @@ import spark.Spark.*
 class RestApiRoutes {
     fun init(world: World, auth: Boolean) {
 
-        get("/players") {
+        get("/api/players") {
             req, res -> Gson().toJson(OnlinePlayersController(req, res, false).init(world))
         }
 
