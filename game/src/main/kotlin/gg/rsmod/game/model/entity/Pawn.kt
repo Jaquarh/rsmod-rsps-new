@@ -301,9 +301,17 @@ abstract class Pawn(val world: World) : Entity() {
                         if (hitmark.damage > hp) {
                             hitmark.damage = hp
                         }
+                        /*
+                         * Only lower the pawn's hp if they do not have infinite
+                         * health enabled.
+                         */
                         if (INFINITE_VARS_STORAGE.get(this, InfiniteVarsType.HP) == 0) {
                             setCurrentHp(hp - hitmark.damage)
                         }
+                        /*
+                         * If the pawn has less than or equal to 0 health,
+                         * terminate all queues and begin the death logic.
+                         */
                         if (getCurrentHp() <= 0) {
                             hit.actions.forEach { action -> action() }
                             interruptQueues()
@@ -441,7 +449,7 @@ abstract class Pawn(val world: World) : Entity() {
 
     suspend fun walkTo(it: QueueTask, x: Int, z: Int, stepType: MovementQueue.StepType = MovementQueue.StepType.NORMAL,
                        projectilePath: Boolean = false): Route {
-        /**
+        /*
          * Already standing on requested destination.
          */
         if (tile.x == x && tile.z == z) {

@@ -12,10 +12,6 @@ import gg.rsmod.game.message.impl.LogoutFullMessage
 import gg.rsmod.game.message.impl.UpdateRebootTimerMessage
 import gg.rsmod.game.model.collision.CollisionManager
 import gg.rsmod.game.model.combat.NpcCombatDef
-import gg.rsmod.game.model.container.key.BANK_KEY
-import gg.rsmod.game.model.container.key.ContainerKey
-import gg.rsmod.game.model.container.key.EQUIPMENT_KEY
-import gg.rsmod.game.model.container.key.INVENTORY_KEY
 import gg.rsmod.game.model.entity.*
 import gg.rsmod.game.model.instance.InstancedMapAllocator
 import gg.rsmod.game.model.priv.PrivilegeSet
@@ -34,9 +30,6 @@ import gg.rsmod.game.service.xtea.XteaKeyService
 import gg.rsmod.game.sync.block.UpdateBlockSet
 import gg.rsmod.util.HuffmanCodec
 import gg.rsmod.util.ServerProperties
-import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap
-import it.unimi.dsi.fastutil.ints.IntOpenHashSet
-import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import it.unimi.dsi.fastutil.objects.ObjectArrayList
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet
 import kotlinx.coroutines.CoroutineDispatcher
@@ -55,7 +48,7 @@ import java.util.concurrent.TimeUnit
  *
  * @author Tom <rspsmods@gmail.com>
  */
-class World(val server: Server, val gameContext: GameContext, val devContext: DevContext) {
+class World(val gameContext: GameContext, val devContext: DevContext) {
 
     /**
      * The [Store] is responsible for handling the data in our cache.
@@ -86,8 +79,6 @@ class World(val server: Server, val gameContext: GameContext, val devContext: De
     lateinit var coroutineDispatcher: CoroutineDispatcher
 
     internal var queues: QueueTaskSet = WorldQueueTaskSet()
-
-    internal val registeredContainers = ObjectOpenHashSet<ContainerKey>()
 
     val players = PawnList(arrayOfNulls<Player>(gameContext.playerLimit))
 
@@ -179,33 +170,11 @@ class World(val server: Server, val gameContext: GameContext, val devContext: De
     internal var multiThreadPathFinding = false
 
     /**
-     * If the [plugins] needs to be hot-swapped in the next upcoming cycle.
-     */
-    internal var hotswapPlugins = false
-
-    /**
-     * The available [Shop]s.
-     */
-    val shops = Object2ObjectOpenHashMap<String, Shop>()
-
-    /**
      * World timers.
      *
      * @see TimerMap
      */
     val timers = TimerMap()
-
-    val npcStats = Int2ObjectOpenHashMap<NpcCombatDef>()
-
-    /**
-     * The multi-combat area [gg.rsmod.game.model.region.Chunk]s.
-     */
-    val multiCombatChunks = IntOpenHashSet()
-
-    /**
-     * The multi-combat area region (default 8x8 [gg.rsmod.game.model.region.Chunk]s).
-     */
-    val multiCombatRegions = IntOpenHashSet()
 
     /**
      * A local collection of [GroundItem]s that are currently spawned. We do
@@ -238,10 +207,6 @@ class World(val server: Server, val gameContext: GameContext, val devContext: De
      */
     internal fun postLoad() {
         plugins.executeWorldInit(this)
-
-        arrayOf(INVENTORY_KEY, EQUIPMENT_KEY, BANK_KEY).forEach { key ->
-            registeredContainers.add(key)
-        }
     }
 
     /**
@@ -298,7 +263,7 @@ class World(val server: Server, val gameContext: GameContext, val devContext: De
                  */
                 groundItemRemoval.add(groundItem)
             } else if (!groundItem.isPublic() && groundItem.currentCycle >= gameContext.gItemPublicDelay) {
-                /**
+                /*
                  * If the ground item is not public, but its cycle count has
                  * reached the public delay set by our game, we make it public.
                  */
@@ -342,7 +307,7 @@ class World(val server: Server, val gameContext: GameContext, val devContext: De
         /*
          * Cycle through shops for their resupply ticks.
          */
-        shops.values.forEach { it.cycle(this) }
+        plugins.shops.values.forEach { it.cycle(this) }
 
         /*
          * Cycle through instanced maps.
@@ -509,6 +474,12 @@ class World(val server: Server, val gameContext: GameContext, val devContext: De
 
     fun getPlayerForUid(uid: PlayerUID): Player? = players.firstOrNull { it.uid.value == uid.value }
 
+    fun getShop(name: String): Shop? = plugins.shops.getOrDefault(name, null)
+
+    fun getMultiCombatChunks(): Set<Int> = plugins.multiCombatChunks
+
+    fun getMultiCombatRegions(): Set<Int> = plugins.multiCombatRegions
+
     fun random(boundInclusive: Int) = random.nextInt(boundInclusive + 1)
 
     fun random(range: IntRange): Int = random.nextInt(range.endInclusive - range.start + 1) + range.start
@@ -567,11 +538,17 @@ class World(val server: Server, val gameContext: GameContext, val devContext: De
     }
 
     fun setNpcDefaults(npc: Npc) {
-        val combatDef = npcStats[npc.id] ?: NpcCombatDef.DEFAULT
+        val combatDef = plugins.npcCombatDefs.getOrDefault(npc.id, null) ?: NpcCombatDef.DEFAULT
         npc.combatDef = combatDef
-        npc.respawns = npc.combatDef.respawnDelay > 0
+
         npc.combatDef.bonuses.forEachIndexed { index, bonus -> npc.equipmentBonuses[index] = bonus }
+        npc.respawns = combatDef.respawnDelay > 0
+
         npc.setCurrentHp(npc.combatDef.hitpoints)
+        combatDef.stats.forEachIndexed { index, level ->
+            npc.stats.setMaxLevel(index, level)
+            npc.stats.setCurrentLevel(index, level)
+        }
     }
 
     /**

@@ -2,12 +2,15 @@ package gg.rsmod.game.plugin
 
 import com.google.common.collect.HashMultimap
 import com.google.common.collect.Multimap
-import gg.rsmod.game.fs.def.NpcDef
+import gg.rsmod.game.Server
 import gg.rsmod.game.model.World
 import gg.rsmod.game.model.attr.COMMAND_ARGS_ATTR
 import gg.rsmod.game.model.attr.COMMAND_ATTR
 import gg.rsmod.game.model.combat.NpcCombatDef
+import gg.rsmod.game.model.container.key.BANK_KEY
 import gg.rsmod.game.model.container.key.ContainerKey
+import gg.rsmod.game.model.container.key.EQUIPMENT_KEY
+import gg.rsmod.game.model.container.key.INVENTORY_KEY
 import gg.rsmod.game.model.entity.*
 import gg.rsmod.game.model.shop.Shop
 import gg.rsmod.game.model.timer.TimerKey
@@ -15,6 +18,7 @@ import io.github.classgraph.ClassGraph
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet
 import mu.KLogging
@@ -163,7 +167,7 @@ class PluginRepository(val world: World) {
 
     private val componentItemSwapPlugins = Int2ObjectOpenHashMap<Plugin.() -> Unit>()
 
-    private val componentToComponentItemSwapPlugins = hashMapOf<Long, Plugin.() -> Unit>()
+    private val componentToComponentItemSwapPlugins = Long2ObjectOpenHashMap<Plugin.() -> Unit>()
 
     /**
      * A map that contains any plugin that will be executed upon entering a new
@@ -283,17 +287,11 @@ class PluginRepository(val world: World) {
     private val npcDeathPlugins = Int2ObjectOpenHashMap<Plugin.() -> Unit>()
 
     /**
-     * Temporarily holds the multi-combat area chunks for this [PluginRepository];
-     * this is then passed onto the [World] and is cleared.
-     *
      * The int value is calculated via [gg.rsmod.game.model.region.ChunkCoords.hashCode].
      */
     internal val multiCombatChunks = IntOpenHashSet()
 
     /**
-     * Temporarily holds the multi-combat area regions for this [PluginRepository].
-     * This is then passed onto the [World] and is cleared.
-     *
      * The int value is calculated via [gg.rsmod.game.model.Tile.regionId].
      */
     internal val multiCombatRegions = IntOpenHashSet()
@@ -317,66 +315,58 @@ class PluginRepository(val world: World) {
      */
     internal val itemSpawns = arrayListOf<GroundItem>()
 
-    /**
-     * Temporarily holds all npc combat definitions set from plugins for this
-     * [PluginRepository].
-     * This is then passed onto the [World] and is cleared.
-     */
     internal val npcCombatDefs = Int2ObjectOpenHashMap<NpcCombatDef>()
 
     /**
-     * Temporarily holds all valid shops set from plugins for this [PluginRepository].
-     * This is then passed onto the [World] and is cleared.
+     * Holds all valid shops set from plugins for this [PluginRepository].
      */
     internal val shops = Object2ObjectOpenHashMap<String, Shop>()
 
     /**
-     * Temporarily holds all container keys set from plugins for this [PluginRepository].
-     * This is then passed onto the [World] and is cleared.
+     * Holds all container keys set from plugins for this [PluginRepository].
      */
-    internal val containerKeys = ObjectOpenHashSet<ContainerKey>()
+    internal val containerKeys = ObjectOpenHashSet<ContainerKey>().apply {
+        add(INVENTORY_KEY)
+        add(EQUIPMENT_KEY)
+        add(BANK_KEY)
+    }
 
     /**
      * Initiates and populates all our plugins.
      */
-    fun init(jarPluginsDirectory: String) {
-        loadPlugins(jarPluginsDirectory)
-
-        setCombatDefs()
+    fun init(server: Server, jarPluginsDirectory: String) {
+        loadPlugins(server, jarPluginsDirectory)
         spawnEntities()
-        setMultiAreas()
-        setContainers()
-        setShops()
     }
 
-    internal fun loadPlugins(jarPluginsDirectory: String) {
-        scanPackageForPlugins(world)
-        scanJarDirectoryForPlugins(world, Paths.get(jarPluginsDirectory))
+    internal fun loadPlugins(server: Server, jarPluginsDirectory: String) {
+        scanPackageForPlugins(server, world)
+        scanJarDirectoryForPlugins(server, world, Paths.get(jarPluginsDirectory))
     }
 
-    fun scanPackageForPlugins(world: World) {
+    fun scanPackageForPlugins(server: Server, world: World) {
         ClassGraph().enableAllInfo().whitelistModules().scan().use { result ->
             val plugins = result.getSubclasses(KotlinPlugin::class.java.name).directOnly()
             plugins.forEach { p ->
                 val pluginClass = p.loadClass(KotlinPlugin::class.java)
-                val constructor = pluginClass.getConstructor(PluginRepository::class.java, World::class.java)
-                constructor.newInstance(this, world)
+                val constructor = pluginClass.getConstructor(PluginRepository::class.java, World::class.java, Server::class.java)
+                constructor.newInstance(this, world, server)
             }
         }
     }
 
-    fun scanJarDirectoryForPlugins(world: World, directory: Path) {
+    fun scanJarDirectoryForPlugins(server: Server, world: World, directory: Path) {
         if (Files.exists(directory)) {
             Files.walk(directory).forEach { path ->
                 if (!path.fileName.toString().endsWith(".jar")) {
                     return@forEach
                 }
-                scanJarForPlugins(world, path)
+                scanJarForPlugins(server, world, path)
             }
         }
     }
 
-    fun scanJarForPlugins(world: World, path: Path) {
+    fun scanJarForPlugins(server: Server, world: World, path: Path) {
         val urls = arrayOf(path.toFile().toURI().toURL())
         val classLoader = URLClassLoader(urls, PluginRepository::class.java.classLoader)
 
@@ -384,18 +374,9 @@ class PluginRepository(val world: World) {
             val plugins = result.getSubclasses(KotlinPlugin::class.java.name).directOnly()
             plugins.forEach { p ->
                 val pluginClass = p.loadClass(KotlinPlugin::class.java)
-                val constructor = pluginClass.getConstructor(PluginRepository::class.java, World::class.java)
-                constructor.newInstance(this, world)
+                val constructor = pluginClass.getConstructor(PluginRepository::class.java, World::class.java, Server::class.java)
+                constructor.newInstance(this, world, server)
             }
-        }
-    }
-
-    private fun setCombatDefs() {
-        npcCombatDefs.forEach { npc, def ->
-            if (world.npcStats[npc] != null) {
-                logger.warn { "Npc $npc (${world.definitions.get(NpcDef::class.java, npc).name}) has a set combat definition but has been overwritten by a plugin." }
-            }
-            world.npcStats[npc] = def
         }
     }
 
@@ -408,25 +389,6 @@ class PluginRepository(val world: World) {
 
         itemSpawns.forEach { item -> world.spawn(item) }
         itemSpawns.clear()
-    }
-
-    private fun setShops() {
-        shops.forEach { name, shop -> world.shops[name] = shop }
-        shops.clear()
-    }
-
-    private fun setMultiAreas() {
-        world.multiCombatChunks.clear()
-        world.multiCombatRegions.clear()
-        world.multiCombatChunks.addAll(multiCombatChunks)
-        world.multiCombatRegions.addAll(multiCombatRegions)
-        multiCombatChunks.clear()
-        multiCombatRegions.clear()
-    }
-
-    private fun setContainers() {
-        world.registeredContainers.addAll(containerKeys)
-        containerKeys.clear()
     }
 
     /**

@@ -68,11 +68,32 @@ class Npc private constructor(val id: Int, world: World, val spawnTile: Tile) : 
     var combatStyle = CombatStyle.STAB
 
     /**
+     * The [Stats] for this npc.
+     */
+    var stats = Stats(world.gameContext.npcStatCount)
+
+    /**
      * Check if the npc will be aggressive towards the parameter player.
      */
     var aggroCheck: ((Npc, Player) -> Boolean)? = null
 
-    val name: String get() = def.name
+    /**
+     * Gets the [NpcDef] corresponding to our [id].
+     */
+    val def: NpcDef = world.definitions.get(NpcDef::class.java, id)
+
+    /**
+     * Getter property for our npc name.
+     */
+    val name: String
+        get() = def.name
+
+    /**
+     * Getter property for a set of any species that our npc may be categorised
+     * as.
+     */
+    val species: Set<Any>
+        get() = combatDef.species
 
     override fun getType(): EntityType = EntityType.NPC
 
@@ -128,14 +149,14 @@ class Npc private constructor(val id: Int, world: World, val spawnTile: Tile) : 
     }
 
     /**
-     * @see active
+     * @see [Npc.active]
      */
     fun setActive(active: Boolean) {
         this.active = active
     }
 
     /**
-     * @see active
+     * @see [Npc.active]
      */
     fun isActive(): Boolean = active
 
@@ -144,14 +165,38 @@ class Npc private constructor(val id: Int, world: World, val spawnTile: Tile) : 
      */
     fun isSpawned(): Boolean = index > 0
 
-    /**
-     * Gets the [NpcDef] corresponding to our [id].
-     */
-    val def: NpcDef = world.definitions.get(NpcDef::class.java, id)
-
-    override fun toString(): String = MoreObjects.toStringHelper(this).add("id", id).add("name", def.name).add("index", index).add("active", active).toString()
+    override fun toString(): String = MoreObjects.toStringHelper(this).add("id", id).add("name", name).add("index", index).add("active", active).toString()
 
     companion object {
         internal const val RESET_PAWN_FACE_DELAY = 25
+    }
+
+    /**
+     * @param nStats the max amount of stats an npc has.
+     */
+    class Stats(val nStats: Int) {
+
+        private val currentLevels = Array(nStats) { 1 }
+
+        private val maxLevels = Array(nStats) { 1 }
+
+        fun getCurrentLevel(skill: Int): Int = currentLevels[skill]
+
+        fun getMaxLevel(skill: Int): Int = maxLevels[skill]
+
+        fun setCurrentLevel(skill: Int, level: Int) {
+            currentLevels[skill] = level
+        }
+
+        fun setMaxLevel(skill: Int, level: Int) {
+            maxLevels[skill] = level
+        }
+
+        companion object {
+            /**
+             * The default count of stats for npcs.
+             */
+            const val DEFAULT_NPC_STAT_COUNT = 5
+        }
     }
 }

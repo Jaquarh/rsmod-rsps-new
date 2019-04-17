@@ -87,7 +87,11 @@ object RangedCombatFormula : CombatFormula {
                 player.hasEquipped(EquipmentType.WEAPON, Items.TWISTED_BOW) -> {
                     // TODO: cap inside Chambers of Xeric is 350
                     val cap = 250.0
-                    val magic = if (target is Player) target.getSkills().getCurrentLevel(Skills.MAGIC) else if (target is Npc) target.combatDef.magicLvl else throw IllegalArgumentException("Target unhandled.")
+                    val magic = when (target) {
+                        is Player -> target.getSkills().getCurrentLevel(Skills.MAGIC)
+                        is Npc -> target.stats.getCurrentLevel(NpcSkills.MAGIC)
+                        else -> throw IllegalStateException("Invalid pawn type. [$target]")
+                    }
                     val modifier = Math.min(cap, 250.0 + (((magic * 3.0) - 14.0) / 100.0) - (Math.pow((((magic * 3.0) / 10.0) - 140.0), 2.0) / 100.0))
                     modifier
                 }
@@ -134,7 +138,11 @@ object RangedCombatFormula : CombatFormula {
                 player.hasEquipped(EquipmentType.WEAPON, Items.TWISTED_BOW) -> {
                     // TODO: cap inside Chambers of Xeric is 250
                     val cap = 140.0
-                    val magic = if (target is Player) target.getSkills().getCurrentLevel(Skills.MAGIC) else if (target is Npc) target.combatDef.magicLvl else throw IllegalArgumentException("Target unhandled.")
+                    val magic = when (target) {
+                        is Player -> target.getSkills().getCurrentLevel(Skills.MAGIC)
+                        is Npc -> target.stats.getCurrentLevel(NpcSkills.MAGIC)
+                        else -> throw IllegalStateException("Invalid pawn type. [$target]")
+                    }
                     val modifier = Math.min(cap, 140.0 + (((magic * 3.0) - 10.0) / 100.0) - (Math.pow((((magic * 3.0) / 10.0) - 100.0), 2.0) / 100.0))
                     modifier
                 }
@@ -232,19 +240,19 @@ object RangedCombatFormula : CombatFormula {
     }
 
     private fun getEffectiveRangedLevel(npc: Npc): Double {
-        var effectiveLevel = npc.combatDef.rangedLvl.toDouble()
+        var effectiveLevel = npc.stats.getCurrentLevel(NpcSkills.RANGED).toDouble()
         effectiveLevel += 8
         return effectiveLevel
     }
 
     private fun getEffectiveAttackLevel(npc: Npc): Double {
-        var effectiveLevel = npc.combatDef.rangedLvl.toDouble()
+        var effectiveLevel = npc.stats.getCurrentLevel(NpcSkills.RANGED).toDouble()
         effectiveLevel += 8
         return effectiveLevel
     }
 
     private fun getEffectiveDefenceLevel(npc: Npc): Double {
-        var effectiveLevel = npc.combatDef.defenceLvl.toDouble()
+        var effectiveLevel = npc.stats.getCurrentLevel(NpcSkills.DEFENCE).toDouble()
         effectiveLevel += 8
         return effectiveLevel
     }
@@ -311,14 +319,14 @@ object RangedCombatFormula : CombatFormula {
 
     private fun isDragon(pawn: Pawn): Boolean {
         if (pawn.getType().isNpc()) {
-            return (pawn as Npc).combatDef.isDragon()
+            return (pawn as Npc).isSpecies(NpcSpecies.DRAGON)
         }
         return false
     }
 
     private fun isFiery(pawn: Pawn): Boolean {
         if (pawn.getType().isNpc()) {
-            return (pawn as Npc).combatDef.isFiery()
+            return (pawn as Npc).isSpecies(NpcSpecies.FIERY)
         }
         return false
     }

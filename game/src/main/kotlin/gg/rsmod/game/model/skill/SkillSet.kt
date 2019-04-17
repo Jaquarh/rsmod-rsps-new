@@ -7,17 +7,7 @@ package gg.rsmod.game.model.skill
  */
 class SkillSet(val maxSkills: Int) {
 
-    private val skills = arrayListOf<Skill>().apply {
-        for (i in 0 until maxSkills) {
-            add(Skill(id = i))
-        }
-    }
-
-    /**
-     * The current combat level. This must be set externally by a login plugin
-     * that is used on whatever revision you want.
-     */
-    var combatLevel = 3
+    private val skills = Array(maxSkills) { index -> Skill(index) }
 
     /**
      * A flag which indicates if the skill's level and xp need to be sent to
@@ -136,7 +126,7 @@ class SkillSet(val maxSkills: Int) {
         private const val MAX_LVL = 99
 
         /**
-         * The default amount of trainable skills on the game.
+         * The default amount of trainable skills by players.
          */
         const val DEFAULT_SKILL_COUNT = 23
 

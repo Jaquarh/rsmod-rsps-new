@@ -4,6 +4,7 @@ import com.google.common.base.Stopwatch
 import gg.rsmod.game.model.Tile
 import gg.rsmod.game.model.World
 import gg.rsmod.game.model.entity.GroundItem
+import gg.rsmod.game.model.entity.Npc
 import gg.rsmod.game.model.skill.SkillSet
 import gg.rsmod.game.protocol.ClientChannelInitializer
 import gg.rsmod.game.service.GameService
@@ -94,6 +95,7 @@ class Server {
                 playerLimit = gameProperties.getOrDefault("max-players", 2048),
                 home = Tile(gameProperties.get<Int>("home-x")!!, gameProperties.get<Int>("home-z")!!, gameProperties.getOrDefault("home-height", 0)),
                 skillCount = gameProperties.getOrDefault("skill-count", SkillSet.DEFAULT_SKILL_COUNT),
+                npcStatCount = gameProperties.getOrDefault("npc-stat-count", Npc.Stats.DEFAULT_NPC_STAT_COUNT),
                 runEnergy = gameProperties.getOrDefault("run-energy", true),
                 gItemPublicDelay = gameProperties.getOrDefault("gitem-public-spawn-delay", GroundItem.DEFAULT_PUBLIC_SPAWN_CYCLES),
                 gItemDespawnDelay = gameProperties.getOrDefault("gitem-despawn-delay", GroundItem.DEFAULT_DESPAWN_CYCLES))
@@ -105,7 +107,7 @@ class Server {
                 debugItemActions = devProperties.getOrDefault("debug-items", false),
                 debugMagicSpells = devProperties.getOrDefault("debug-spells", false))
 
-        val world = World(this, gameContext, devContext)
+        val world = World(gameContext, devContext)
 
         /*
          * Load the file store.
@@ -152,6 +154,7 @@ class Server {
          */
         individualStopwatch.reset().start()
         world.plugins.init(
+                server = this,
                 jarPluginsDirectory = gameProperties.getOrDefault("plugin-packed-path", "./plugins"))
         logger.info("Loaded {} plugins in {}ms.", DecimalFormat().format(world.plugins.getPluginCount()), individualStopwatch.elapsed(TimeUnit.MILLISECONDS))
 

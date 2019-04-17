@@ -33,15 +33,8 @@ const val INVENTORY_INTERFACE_KEY = 93
  */
 const val INTERFACE_INV_INIT_BIG = 150
 
-/**
- * A decoupled file that holds extensions and helper functions, related to players,
- * that can be used throughout plugins.
- *
- * @author Tom <rspsmods@gmail.com>
- */
-
 fun Player.openShop(shop: String) {
-    val s = world.shops[shop]
+    val s = world.getShop(shop)
     if (s != null) {
         attr[CURRENT_SHOP_ATTR] = s
         shopDirty = true
@@ -417,7 +410,7 @@ fun Player.sendWorldMapTile() {
 }
 
 fun Player.sendCombatLevelText() {
-    setComponentText(593, 2, "Combat Lvl: ${getSkills().combatLevel}")
+    setComponentText(593, 2, "Combat Lvl: $combatLevel")
 }
 
 fun Player.sendWeaponComponentInformation() {
@@ -441,7 +434,7 @@ fun Player.sendWeaponComponentInformation() {
 }
 
 fun Player.calculateAndSetCombatLevel(): Boolean {
-    val old = getSkills().combatLevel
+    val old = combatLevel
 
     val attack = getSkills().getMaxLevel(Skills.ATTACK)
     val defence = getSkills().getMaxLevel(Skills.DEFENCE)
@@ -453,11 +446,11 @@ fun Player.calculateAndSetCombatLevel(): Boolean {
 
     val base = Ints.max(strength + attack, magic * 2, ranged * 2)
 
-    getSkills().combatLevel = ((base * 1.3 + defence + hitpoints + prayer / 2) / 4).toInt()
+    combatLevel = ((base * 1.3 + defence + hitpoints + prayer / 2) / 4).toInt()
 
-    val changed = getSkills().combatLevel != old
+    val changed = combatLevel != old
     if (changed) {
-        runClientScript(389, getSkills().combatLevel)
+        runClientScript(389, combatLevel)
         sendCombatLevelText()
         return true
     }
@@ -477,10 +470,10 @@ fun Player.calculateDeathContainers(): DeathContainers {
     var totalItems = inventory.rawItems.filterNotNull() + equipment.rawItems.filterNotNull()
     val valueService = world.getService(ItemMarketValueService::class.java)
 
-    if (valueService != null) {
-        totalItems = totalItems.sortedByDescending { valueService.get(it.id) }
+    totalItems = if (valueService != null) {
+        totalItems.sortedBy { it.id }.sortedWith(compareByDescending { valueService.get(it.id) })
     } else {
-        totalItems = totalItems.sortedByDescending { world.definitions.getNullable(ItemDef::class.java, it.id)?.cost ?: 0 }
+        totalItems.sortedBy { it.id }.sortedWith(compareByDescending { world.definitions.get(ItemDef::class.java, it.id).cost })
     }
 
     totalItems.forEach { item ->
@@ -498,7 +491,9 @@ fun Player.calculateDeathContainers(): DeathContainers {
     return DeathContainers(kept = keptContainer, lost = lostContainer)
 }
 
-fun Player.hasItem(item: Int, amount: Int = 1) : ItemContainer? = containers.values.firstOrNull { container -> container.getItemCount(item) >= amount }
+// Note: this does not take ground items, that may belong to the player, into
+// account.
+fun Player.hasItem(item: Int, amount: Int = 1): ItemContainer? = containers.values.firstOrNull { container -> container.getItemCount(item) >= amount }
 
 fun Player.isPrivilegeEligible(to: String): Boolean = world.privileges.isEligible(privilege, to)
 
