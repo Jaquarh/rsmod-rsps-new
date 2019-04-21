@@ -23,10 +23,16 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import org.mindrot.jbcrypt.BCrypt
 import java.util.*
 
+/**
+ * A [SQLService] implementation that decodes and encodes player
+ * data in SQL.
+ *
+ * @author KyeT <okaydots@gmail.com>
+ */
+
 class SQLService : Service, PlayerSerializerService()
 {
     private var mysql = false
-    private var conn = null
 
     override fun initSerializer(server: Server, world: World, serviceProperties: ServerProperties) {
         // Ensures the SQL is enabled / disabled
@@ -64,6 +70,8 @@ class SQLService : Service, PlayerSerializerService()
 
         // Start connection
         Database.connect("jdbc:$driverHost://$host:$port/$dbname", driver = driver, user = user, password = pswd)
+
+        // TODO("Create rest of SQL models")
 
         // Create tables if not yet created
         transaction {
@@ -140,17 +148,28 @@ class SQLService : Service, PlayerSerializerService()
             }
 
             // Load player items
-            var containerQuery: Query? = null
+            var containerInventoryQuery: Query? = null
+            var containerBankQuery: Query? = null
 
             transaction {
-                containerQuery = (ItemContainerModel innerJoin ItemModel).select {
+                containerInventoryQuery = (ItemContainerModel innerJoin ItemModel).select {
                     ItemContainerModel.playerId eq query!!.first()[PlayerModel.id]
+                    ItemContainerModel.name eq "inventory"
+                }
+
+                containerBankQuery = (ItemContainerModel innerJoin ItemModel).select {
+                    ItemContainerModel.playerId eq query!!.first()[PlayerModel.id]
+                    ItemContainerModel.name eq "bank"
                 }
             }
 
-            containerQuery!!.forEach {
-                //val key = world.plugins.containerKeys.firstOrNull { other -> other.name == it[ItemContainerModel.name] }
+            val itemContainers = mutableListOf<Query?>(containerInventoryQuery, containerBankQuery)
+
+            itemContainers.forEach {
+                // TODO("Make containerKeys plugin public")
             }
+
+            // TODO("Load rest of SQL data")
 
             return PlayerLoadResult.LOAD_ACCOUNT
         } else {
@@ -166,7 +185,43 @@ class SQLService : Service, PlayerSerializerService()
             return saveClientData(client)
         }
 
-        // TODO("Updating row of player")
+        transaction {
+
+            // Update  player model
+            PlayerModel.update ({
+                PlayerModel.id eq client.uuid.toInt()
+            }) {
+                it[PlayerModel.username] = client.loginUsername
+                it[PlayerModel.hash] = client.passwordHash
+                it[PlayerModel.xteaKeyOne] = client.currentXteaKeys[0]
+                it[PlayerModel.xteaKeyTwo] = client.currentXteaKeys[1]
+                it[PlayerModel.xteaKeyThree] = client.currentXteaKeys[2]
+                it[PlayerModel.xteaKeyFour] = client.currentXteaKeys[3]
+                it[PlayerModel.displayName] = client.username
+                it[PlayerModel.x] = client.tile.x
+                it[PlayerModel.height] = client.tile.height
+                it[PlayerModel.z] = client.tile.z
+                it[PlayerModel.privilege] = client.privilege.id
+                it[PlayerModel.runEnergy] = client.runEnergy.toFloat()
+                it[PlayerModel.displayMode] = client.interfaces.displayMode.id
+            }
+
+            // Update player skills
+            SkillModel.select {
+                SkillModel.playerId eq client.uuid.toInt()
+            }.forEach { skill ->
+                SkillModel.update({
+                    SkillModel.playerId eq client.uuid.toInt()
+                    SkillModel.skill eq skill[SkillModel.skill]
+                }) {
+                    it[SkillModel.lvl] = client.getSkills().getCurrentLevel(skill[SkillModel.skill])
+                    it[SkillModel.xp] = client.getSkills().getCurrentXp(skill[SkillModel.skill]).toFloat()
+                }
+            }
+
+            // TODO("Update rest of client data")
+
+        }
 
         return saveClientData(client)
     }
