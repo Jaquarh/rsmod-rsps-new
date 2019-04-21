@@ -146,6 +146,11 @@ class PluginRepository(val world: World) {
     private val buttonPlugins = Int2ObjectOpenHashMap<Plugin.() -> Unit>()
 
     /**
+     * A map of equipment option plugins.
+     */
+    private val equipmentOptionPlugins = Int2ObjectOpenHashMap<Plugin.() -> Unit>()
+
+    /**
      * A map of plugins that contain plugins that should execute when equipping
      * items from a certain equipment slot.
      */
@@ -336,7 +341,7 @@ class PluginRepository(val world: World) {
     /**
      * Holds all container keys set from plugins for this [PluginRepository].
      */
-    internal val containerKeys = ObjectOpenHashSet<ContainerKey>().apply {
+    val containerKeys = ObjectOpenHashSet<ContainerKey>().apply {
         add(INVENTORY_KEY)
         add(EQUIPMENT_KEY)
         add(BANK_KEY)
@@ -756,6 +761,23 @@ class PluginRepository(val world: World) {
             return true
         }
         return false
+    }
+
+    fun bindEquipmentOption(item: Int, option: Int, plugin: Plugin.() -> Unit) {
+        val hash = (item shl 16) or option
+        if (equipmentOptionPlugins.containsKey(hash)) {
+            logger.error(RuntimeException("Button hash already bound to a plugin: [item=$item, opt=$option]")) {}
+            return
+        }
+        equipmentOptionPlugins[hash] = plugin
+        pluginCount++
+    }
+
+    fun executeEquipmentOption(p: Player, item: Int, option: Int): Boolean {
+        val hash = (item shl 16) or option
+        val plugin = equipmentOptionPlugins[hash] ?: return false
+        p.executePlugin(plugin)
+        return true
     }
 
     fun bindEquipSlot(equipSlot: Int, plugin: Plugin.() -> Unit) {
