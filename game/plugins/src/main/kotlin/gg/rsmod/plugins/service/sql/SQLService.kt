@@ -20,6 +20,8 @@ import mu.KLogging
 
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
+import org.mindrot.jbcrypt.BCrypt
+import java.util.*
 
 class SQLService : Service, PlayerSerializerService()
 {
@@ -94,7 +96,31 @@ class SQLService : Service, PlayerSerializerService()
         if(!query!!.empty()) {
             val world = client.world
 
-            // TODO("Login validation")
+            // Tests login validation
+            if (!request.reconnecting) {
+                /*
+                 * If the [request] is not a [LoginRequest.reconnecting] request, we have to
+                 * verify the password is correct.
+                 */
+                if (!BCrypt.checkpw(request.password, query!!.first()[PlayerModel.hash])) {
+                    return PlayerLoadResult.INVALID_CREDENTIALS
+                }
+            } else {
+                /*
+                 * If the [request] is a [LoginRequest.reconnecting] request, we
+                 * verify that the login xteas match from our previous session.
+                 */
+                val previousXteas = IntArray(4)
+
+                previousXteas[0] = query!!.first()[PlayerModel.xteaKeyOne]
+                previousXteas[1] = query!!.first()[PlayerModel.xteaKeyTwo]
+                previousXteas[2] = query!!.first()[PlayerModel.xteaKeyThree]
+                previousXteas[3] = query!!.first()[PlayerModel.xteaKeyFour]
+
+                if (!Arrays.equals(previousXteas, request.xteaKeys)) {
+                    return PlayerLoadResult.INVALID_RECONNECTION
+                }
+            }
 
             // Load player details
 

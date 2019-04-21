@@ -13,8 +13,8 @@ object PlayerModel : Table("Players") {
     val runEnergy = float("run_energy").default(0.toFloat())
     val displayMode = integer("display_mode").default(0)
     val hash = varchar("password_hash", 60)
-    val xteaKeyOne = integer("xtea_one").nullable()
-    val xteaKeyTwo = integer("xtea_two").nullable()
-    val xteaKeyThree = integer("xtea_three").nullable()
-    val xteaKeyFour = integer("xtea_four").nullable()
+    val xteaKeyOne = integer("xtea_one")
+    val xteaKeyTwo = integer("xtea_two")
+    val xteaKeyThree = integer("xtea_three")
+    val xteaKeyFour = integer("xtea_four")
 }
