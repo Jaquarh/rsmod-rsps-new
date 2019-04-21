@@ -4,8 +4,10 @@ import gg.rsmod.game.Server
 import gg.rsmod.game.model.PlayerUID
 import gg.rsmod.game.model.Tile
 import gg.rsmod.game.model.World
+import gg.rsmod.game.model.container.ItemContainer
 import gg.rsmod.game.model.entity.Client
 import gg.rsmod.game.model.interf.DisplayMode
+import gg.rsmod.game.model.item.Item
 import gg.rsmod.game.model.priv.Privilege
 import gg.rsmod.game.service.Service
 import gg.rsmod.game.service.serializer.PlayerLoadResult
@@ -71,7 +73,9 @@ class SQLService : Service, PlayerSerializerService()
         // Start connection
         Database.connect("jdbc:$driverHost://$host:$port/$dbname", driver = driver, user = user, password = pswd)
 
-        // TODO("Create rest of SQL models")
+        // TODO("Create attributes model")
+        // TODO("Create timers model")
+        // TODO("Create varps model")
 
         // Create tables if not yet created
         transaction {
@@ -165,11 +169,26 @@ class SQLService : Service, PlayerSerializerService()
 
             val itemContainers = mutableListOf<Query?>(containerInventoryQuery, containerBankQuery)
 
-            itemContainers.forEach {
-                // TODO("Make containerKeys plugin public")
+            itemContainers.forEach {q ->
+
+                // Find key
+                val key = world.plugins.containerKeys.firstOrNull { other -> other.name == q!!.first()[ItemContainerModel.name] } ?: return@forEach
+
+                // Create container
+                val container = if (client.containers.containsKey(key)) client.containers[key] else {
+                    client.containers[key] = ItemContainer(client.world.definitions, key)
+                    client.containers[key]
+                }!!
+
+                // Loop through items and add to container
+                q!!.forEach {
+                    container[it[ItemModel.index]] = Item(it[ItemModel.itemId], it[ItemModel.amount])
+                }
             }
 
-            // TODO("Load rest of SQL data")
+            // TODO("Load attributes")
+            // TODO("Load timers")
+            // TODO("Load varps")
 
             return PlayerLoadResult.LOAD_ACCOUNT
         } else {
@@ -219,7 +238,10 @@ class SQLService : Service, PlayerSerializerService()
                 }
             }
 
-            // TODO("Update rest of client data")
+            // TODO("Save item containers")
+            // TODO("Save attributes")
+            // TODO("Save timers")
+            // TODO("Save varps")
 
         }
 
