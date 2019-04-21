@@ -13,8 +13,5 @@ class RestApiRoutes {
             req, res -> Gson().toJson(OnlinePlayersController(req, res, false).init(world))
         }
 
-        /*get("/item/:id/:amount/:player") {
-            req, res -> Gson().toJson(CommandsController(req, res, auth).init(world))
-        }*/
     }
 }

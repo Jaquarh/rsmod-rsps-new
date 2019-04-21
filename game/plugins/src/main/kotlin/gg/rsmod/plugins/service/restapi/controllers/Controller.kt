@@ -1,6 +1,6 @@
 package gg.rsmod.plugins.service.restapi.controllers
 
-import com.google.gson.JsonArray
+import com.google.gson.JsonObject
 import gg.rsmod.game.model.World
 import gg.rsmod.plugins.service.restapi.auth.Auth
 import spark.Request
@@ -27,7 +27,7 @@ abstract class Controller(req: Request, resp: Response, auth: Boolean) {
         }
     }
 
-    abstract fun init(world: World): JsonArray
+    abstract fun init(world: World): JsonObject
 
     fun deploy(): String {
         return Auth.build()

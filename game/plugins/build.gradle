@@ -7,11 +7,16 @@ dependencies {
     implementation project(':net')
     implementation project(':util')
 
+    // RestApiService
     compile 'com.sparkjava:spark-core:2.3'
     testCompile group: 'junit', name: 'junit', version: '4.+'
 
-    compile 'tel.egram.kuery:core:0.5.3'
-    compile 'tel.egram.kuery:sqlite:0.5.3'
+    // SqlService
+    compile 'org.jetbrains.exposed:exposed:0.13.6'
+    compile "org.postgresql:postgresql:42.2.2"
+    compile "mysql:mysql-connector-java:5.1.46"
+    compile "com.microsoft.sqlserver:mssql-jdbc:6.4.0.jre7"
+    // https://blogs.oracle.com/dev2dev/get-oracle-jdbc-drivers-and-ucp-from-oracle-maven-repository-without-ides
 }
 
 dokka {

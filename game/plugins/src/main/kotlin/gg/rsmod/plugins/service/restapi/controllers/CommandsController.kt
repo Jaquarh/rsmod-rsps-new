@@ -12,13 +12,13 @@ class CommandsController(req: Request, resp: Response, auth: Boolean) : Controll
     val req = req
     val auth = auth
 
-    override fun init(world: World): JsonArray {
+    override fun init(world: World): JsonObject {
         if(!super.authState && auth) {
             val arr = JsonArray()
             val obj = JsonObject()
             obj.addProperty("error", "Auth code not supplied or invalid.")
             arr.add(obj)
-            return arr
+            return obj
         }
 
         val itemId = req.params("id").toInt()
@@ -27,6 +27,6 @@ class CommandsController(req: Request, resp: Response, auth: Boolean) : Controll
 
         world.getPlayerForName(player)?.inventory?.add(Item(itemId, amount))
 
-       return JsonArray()
+       return JsonObject()
     }
 }
