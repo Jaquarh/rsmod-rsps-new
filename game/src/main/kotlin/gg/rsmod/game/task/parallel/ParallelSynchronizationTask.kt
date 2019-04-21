@@ -52,7 +52,7 @@ class ParallelSynchronizationTask(private val executor: ExecutorService) : GameT
              * to send any synchronization data to their game-client as they do
              * not have one.
              */
-            if (p.getType().isHumanControlled() && p.initiated) {
+            if (p.entityType.isHumanControlled() && p.initiated) {
                 submit(phaser, executor, p, PlayerSynchronizationTask)
             } else {
                 phaser.arriveAndDeregister()
@@ -67,7 +67,7 @@ class ParallelSynchronizationTask(private val executor: ExecutorService) : GameT
              * to send any synchronization data to their game-client as they do
              * not have one.
              */
-            if (p.getType().isHumanControlled() && p.initiated) {
+            if (p.entityType.isHumanControlled() && p.initiated) {
                 submit(phaser, executor, p, npcSync)
             } else {
                 phaser.arriveAndDeregister()
@@ -88,7 +88,7 @@ class ParallelSynchronizationTask(private val executor: ExecutorService) : GameT
         phaser.arriveAndAwaitAdvance()
     }
 
-    private fun <T: Pawn> submit(phaser: Phaser, executor: ExecutorService, pawn: T, task: SynchronizationTask<T>) {
+    private fun <T : Pawn> submit(phaser: Phaser, executor: ExecutorService, pawn: T, task: SynchronizationTask<T>) {
         executor.execute {
             try {
                 task.run(pawn)
@@ -100,5 +100,5 @@ class ParallelSynchronizationTask(private val executor: ExecutorService) : GameT
         }
     }
 
-    companion object: KLogging()
+    companion object : KLogging()
 }

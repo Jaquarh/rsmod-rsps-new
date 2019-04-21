@@ -91,7 +91,7 @@ object RangedCombatStrategy : CombatStrategy {
          * A list of actions that will be executed upon this hit dealing damage
          * to the [target].
          */
-        val hitActions = arrayListOf<Function0<Unit>>()
+        val hitActions = mutableListOf<Function0<Unit>>()
         hitActions.add { Combat.postDamage(pawn, target) }
 
         if (pawn is Player) {
@@ -146,7 +146,7 @@ object RangedCombatStrategy : CombatStrategy {
         val landHit = accuracy >= world.randomDouble()
         val damage = if (landHit) world.random(maxHit) else 0
 
-        if (damage > 0 && pawn.getType().isPlayer()) {
+        if (damage > 0 && pawn.entityType.isPlayer()) {
             addCombatXp(pawn as Player, target, damage)
         }
 
@@ -160,7 +160,7 @@ object RangedCombatStrategy : CombatStrategy {
     }
 
     private fun addCombatXp(player: Player, target: Pawn, damage: Int) {
-        val modDamage = if (target.getType().isNpc()) Math.min(target.getCurrentHp(), damage) else damage
+        val modDamage = if (target.entityType.isNpc()) Math.min(target.getCurrentHp(), damage) else damage
         val mode = CombatConfigs.getXpMode(player)
         val multiplier = if (target is Npc) Combat.getNpcXpMultiplier(target) else 1.0
 

@@ -28,7 +28,6 @@ dependencies {
     compile "io.github.classgraph:classgraph:$classGraphVersion"
     compile "it.unimi.dsi:fastutil:$fastUtilVersion"
 
-    implementation "org.mindrot:jbcrypt:$bcryptVersion"
     implementation "org.bouncycastle:bcprov-jdk15on:$bouncycastleVersion"
 
     testImplementation "junit:junit:$junitVersion"
@@ -74,6 +73,13 @@ task extractDependencies(type: Copy) {
         includeEmptyDirs = false
     }
     into 'build/deps'
+}
+
+task ktlint(type: JavaExec, group: "verification") {
+    description = "Check Kotlin code style."
+    classpath = configurations.ktlint
+    main = "com.github.shyiko.ktlint.Main"
+    args "src/**/*.kt"
 }
 
 applicationDistribution.from("$rootDir/data/") {

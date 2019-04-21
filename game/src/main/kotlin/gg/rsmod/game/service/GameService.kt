@@ -110,7 +110,7 @@ class GameService : Service {
     /**
      * A list of tasks that will be executed per game cycle.
      */
-    private val tasks = arrayListOf<GameTask>()
+    private val tasks = mutableListOf<GameTask>()
 
     internal val messageStructures = MessageStructureSet()
 
@@ -299,7 +299,7 @@ class GameService : Service {
         }
     }
 
-    companion object: KLogging() {
+    companion object : KLogging() {
 
         /**
          * The amount of ticks that must go by for debug info to be logged.

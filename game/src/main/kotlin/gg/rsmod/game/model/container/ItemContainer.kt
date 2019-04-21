@@ -272,7 +272,7 @@ class ItemContainer(val definitions: DefinitionSet, val key: ContainerKey) : Ite
         }
 
         var completed = 0
-        val added = arrayListOf<SlotItem>()
+        val added = mutableListOf<SlotItem>()
 
         if (!stack) {
             /*
@@ -310,7 +310,7 @@ class ItemContainer(val definitions: DefinitionSet, val key: ContainerKey) : Ite
                      * at least one item, whether stackable or not, can fit in
                      * our container.
                      */
-                    logger.error(RuntimeException("Unable to find a free slot for a stackable item. [capacity=$capacity, item=$item, quantity=$amount]")) {  }// print capacity as only form of distinction
+                    logger.error(RuntimeException("Unable to find a free slot for a stackable item. [capacity=$capacity, item=$item, quantity=$amount]")) {}
                     return ItemTransaction(amount, completed, emptyList())
                 }
             }
@@ -386,7 +386,7 @@ class ItemContainer(val definitions: DefinitionSet, val key: ContainerKey) : Ite
         }
 
         var totalRemoved = 0
-        val removed = arrayListOf<SlotItem>()
+        val removed = mutableListOf<SlotItem>()
 
         val skippedIndices = if (beginSlot != -1) 0 until beginSlot else null
 
@@ -483,5 +483,5 @@ class ItemContainer(val definitions: DefinitionSet, val key: ContainerKey) : Ite
         dirty = true
     }
 
-    companion object: KLogging()
+    companion object : KLogging()
 }

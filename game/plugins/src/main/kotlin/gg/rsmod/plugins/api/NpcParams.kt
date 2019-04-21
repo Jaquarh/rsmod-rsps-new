@@ -38,15 +38,7 @@ class NpcCombatBuilder {
 
     private var attackSpeed = -1
 
-    private var attackLevel = -1
-
-    private var strengthLevel = -1
-
-    private var defenceLevel = -1
-
-    private var magicLevel = -1
-
-    private var rangedLevel = -1
+    private var stats = Array(5) { -1 }
 
     private var defaultAttackAnim = -1
 
@@ -60,7 +52,9 @@ class NpcCombatBuilder {
 
     private var aggroTargetDelay = -1
 
-    private var inflictPoisonChance = -1.0
+    private var poisonChance = -1.0
+
+    private var venomChance = -1.0
 
     private var poisonImmunity = false
 
@@ -80,20 +74,19 @@ class NpcCombatBuilder {
         check(deathAnimList.isNotEmpty()) { "A death animation must be set." }
         check(respawnDelay != -1) { "Respawn delay must be set." }
 
-        attackLevel = Math.max(1, attackLevel)
-        strengthLevel = Math.max(1, strengthLevel)
-        defenceLevel = Math.max(1, defenceLevel)
-        magicLevel = Math.max(1, magicLevel)
-        rangedLevel = Math.max(1, rangedLevel)
-        inflictPoisonChance = Math.max(0.0, inflictPoisonChance)
+        stats.forEachIndexed { index, level ->
+            stats[index] = Math.max(1, level)
+        }
+        poisonChance = Math.max(0.0, poisonChance)
+        venomChance = Math.max(0.0, venomChance)
         slayerReq = Math.max(1, slayerReq)
         slayerXp = Math.max(0.0, slayerXp)
 
         return NpcCombatDef(
-                maxHealth, listOf(attackLevel, strengthLevel, defenceLevel, magicLevel, rangedLevel),
-                attackSpeed, defaultAttackAnim, defaultBlockAnim, deathAnimList,
-                respawnDelay, aggroRadius, aggroTargetDelay, inflictPoisonChance,
-                poisonImmunity, venomImmunity, slayerReq, slayerXp, bonuses.toList(),
+                maxHealth, stats.toList(), attackSpeed, defaultAttackAnim,
+                defaultBlockAnim, deathAnimList, respawnDelay, aggroRadius,
+                aggroTargetDelay, poisonChance, venomChance, poisonImmunity,
+                venomImmunity, slayerReq, slayerXp, bonuses.toList(),
                 speciesSet)
     }
 
@@ -113,32 +106,38 @@ class NpcCombatBuilder {
     }
 
     fun setAttackLevel(level: Int): NpcCombatBuilder {
-        check(attackLevel == -1) { "Attack level already set." }
-        this.attackLevel = level
+        check(stats[NpcSkills.ATTACK] == -1) { "Attack level already set." }
+        stats[NpcSkills.ATTACK] = level
         return this
     }
 
     fun setStrengthLevel(level: Int): NpcCombatBuilder {
-        check(strengthLevel == -1) { "Strength level already set." }
-        this.strengthLevel = level
+        check(stats[NpcSkills.STRENGTH] == -1) { "Strength level already set." }
+        stats[NpcSkills.STRENGTH] = level
         return this
     }
 
     fun setDefenceLevel(level: Int): NpcCombatBuilder {
-        check(defenceLevel == -1) { "Defence level already set." }
-        this.defenceLevel = level
+        check(stats[NpcSkills.DEFENCE] == -1) { "Defence level already set." }
+        stats[NpcSkills.DEFENCE] = level
         return this
     }
 
     fun setMagicLevel(level: Int): NpcCombatBuilder {
-        check(magicLevel == -1) { "Magic level already set." }
-        this.magicLevel = level
+        check(stats[NpcSkills.MAGIC] == -1) { "Magic level already set." }
+        stats[NpcSkills.MAGIC] = level
         return this
     }
 
     fun setRangedLevel(level: Int): NpcCombatBuilder {
-        check(rangedLevel == -1) { "Ranged level already set." }
-        this.rangedLevel = level
+        check(stats[NpcSkills.RANGED] == -1) { "Ranged level already set." }
+        stats[NpcSkills.RANGED] = level
+        return this
+    }
+
+    fun setLevel(index: Int, level: Int): NpcCombatBuilder {
+        check(stats[index] == -1) { "Level [$index] already set." }
+        stats[index] = level
         return this
     }
 
@@ -169,10 +168,10 @@ class NpcCombatBuilder {
         return this
     }
 
-    fun setDeathAnimation(animation: Int, vararg others: Int): NpcCombatBuilder {
+    fun setDeathAnimation(vararg anims: Int): NpcCombatBuilder {
+        check(anims.isNotEmpty()) { "Must specify at least one animation." }
         check(deathAnimList.isEmpty()) { "Death animation(s) already set." }
-        deathAnimList.add(animation)
-        others.forEach { deathAnimList.add(it) }
+        anims.forEach { deathAnimList.add(it) }
         return this
     }
 
@@ -194,9 +193,15 @@ class NpcCombatBuilder {
         return this
     }
 
-    fun setInflictPoisonChance(chance: Double): NpcCombatBuilder {
-        check(inflictPoisonChance == -1.0) { "Inflict poison chance already set." }
-        inflictPoisonChance = chance
+    fun setPoisonChance(chance: Double): NpcCombatBuilder {
+        check(poisonChance == -1.0) { "Poison chance already set." }
+        poisonChance = chance
+        return this
+    }
+
+    fun setVenomChance(chance: Double): NpcCombatBuilder {
+        check(venomChance == -1.0) { "Venom chance already set." }
+        venomChance = chance
         return this
     }
 

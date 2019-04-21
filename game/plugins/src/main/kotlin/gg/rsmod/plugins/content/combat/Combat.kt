@@ -13,10 +13,7 @@ import gg.rsmod.game.model.entity.Player
 import gg.rsmod.game.model.queue.QueueTask
 import gg.rsmod.game.model.timer.ACTIVE_COMBAT_TIMER
 import gg.rsmod.game.model.timer.ATTACK_DELAY
-import gg.rsmod.plugins.api.BonusSlot
-import gg.rsmod.plugins.api.NpcSkills
-import gg.rsmod.plugins.api.ProjectileType
-import gg.rsmod.plugins.api.WeaponType
+import gg.rsmod.plugins.api.*
 import gg.rsmod.plugins.api.ext.*
 import gg.rsmod.plugins.content.combat.strategy.CombatStrategy
 import gg.rsmod.plugins.content.combat.strategy.MagicCombatStrategy
@@ -75,7 +72,10 @@ object Combat {
             return
         }
 
-        if (target.getType().isNpc()) {
+        val blockAnimation = CombatConfigs.getBlockAnimation(target)
+        target.animate(blockAnimation)
+
+        if (target.entityType.isNpc()) {
             if (!target.attr.has(COMBAT_TARGET_FOCUS_ATTR) || target.attr[COMBAT_TARGET_FOCUS_ATTR]!!.get() != pawn) {
                 target.attack(pawn)
             }
@@ -141,8 +141,8 @@ object Combat {
             return false
         }
 
-        val pvp = pawn.getType().isPlayer() && target.getType().isPlayer()
-        val pvm = pawn.getType().isPlayer() && target.getType().isNpc()
+        val pvp = pawn.entityType.isPlayer() && target.entityType.isPlayer()
+        val pvm = pawn.entityType.isPlayer() && target.entityType.isNpc()
 
         if (pawn is Player) {
             if (!pawn.isOnline) {
@@ -170,6 +170,10 @@ object Combat {
             }
             if (!target.def.isAttackable() || target.combatDef.hitpoints == -1) {
                 (pawn as? Player)?.message("You can't attack this npc.")
+                return false
+            }
+            if (pawn is Player && target.combatDef.slayerReq > pawn.getSkills().getMaxLevel(Skills.SLAYER)) {
+                pawn.message("You need a higher Slayer level to know how to wound this monster.")
                 return false
             }
         } else if (target is Player) {

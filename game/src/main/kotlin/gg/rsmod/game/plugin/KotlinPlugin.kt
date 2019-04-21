@@ -1,6 +1,7 @@
 package gg.rsmod.game.plugin
 
 import gg.rsmod.game.Server
+import gg.rsmod.game.event.Event
 import gg.rsmod.game.fs.def.ItemDef
 import gg.rsmod.game.fs.def.NpcDef
 import gg.rsmod.game.fs.def.ObjectDef
@@ -180,8 +181,8 @@ abstract class KotlinPlugin(private val r: PluginRepository, val world: World, v
     /**
      * Invoke [logic] when an [item] is used on a [gg.rsmod.game.model.entity.GameObject]
      *
-     * @param obj   The game object id
-     * @param item  The item id
+     * @param obj the game object id
+     * @param item the item id
      */
     fun on_item_on_obj(obj: Int, item: Int, lineOfSightDistance: Int = -1, logic: (Plugin).() -> Unit) {
         r.bindItemOnObject(obj, item, lineOfSightDistance, logic)
@@ -233,6 +234,12 @@ abstract class KotlinPlugin(private val r: PluginRepository, val world: World, v
     fun on_world_init(logic: (Plugin).() -> Unit) = r.bindWorldInit(logic)
 
     /**
+     * Invoke [logic] when an [Event] is triggered.
+     */
+    @Suppress("UNCHECKED_CAST")
+    fun <T : Event> on_event(event: Class<out T>, logic: Plugin.(T) -> Unit) = r.bindEvent(event, logic as Plugin.(Event) -> Unit)
+
+    /**
      * Invoke [logic] on player log in.
      */
     fun on_login(logic: (Plugin).() -> Unit) = r.bindLogin(logic)
@@ -250,8 +257,7 @@ abstract class KotlinPlugin(private val r: PluginRepository, val world: World, v
     /**
      * Invoked when an item is swapped between two components.
      */
-    fun on_component_to_component_item_swap(srcInterfaceId: Int, srcComponent: Int, dstInterfaceId: Int, dstComponent: Int, plugin: Plugin.() -> Unit)
-            = r.bindComponentToComponentItemSwap(srcInterfaceId, srcComponent, dstInterfaceId, dstComponent, plugin)
+    fun on_component_to_component_item_swap(srcInterfaceId: Int, srcComponent: Int, dstInterfaceId: Int, dstComponent: Int, plugin: Plugin.() -> Unit) = r.bindComponentToComponentItemSwap(srcInterfaceId, srcComponent, dstInterfaceId, dstComponent, plugin)
 
     /**
      * Invokes when a player interaction option is executed

@@ -20,12 +20,19 @@ allprojects {
         maven { url 'https://jitpack.io' }
     }
 
+    configurations {
+        ktlint
+    }
+
     dependencies {
+        ktlint "com.github.shyiko:ktlint:0.15.0"
+
         compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion"
         compile "org.slf4j:slf4j-api:$slf4jVersion"
         compile "org.apache.logging.log4j:log4j-slf4j-impl:$log4jVersion"
         compile "io.github.microutils:kotlin-logging:$kloggingVersion"
 
+        implementation "org.mindrot:jbcrypt:$bcryptVersion"
         implementation "com.google.code.gson:gson:$gsonVersion"
         implementation "com.github.runelite.runelite:cache:$runeliteVersion"
         implementation "io.netty:netty-all:$nettyVersion"

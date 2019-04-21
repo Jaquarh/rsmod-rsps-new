@@ -83,20 +83,25 @@ class SkillSet(val maxSkills: Int) {
     /**
      * Alters the current level of the skill by adding [value] onto it.
      *
-     * @param skill
-     * The skill level to alter.
+     * @param skill the skill level to alter.
      *
-     * @param value
-     * The value which to add onto the current skill level. This value can be
-     * negative.
+     * @param value the value which to add onto the current skill level. This
+     * value can be negative.
      *
-     * @param capValue
-     * The amount of levels which can be surpass the max level in the skill.
-     * For example, if this value is set to [3] on a skill that has is [99],
-     * that means that the level can be altered from [99] to [102].
+     * @param capValue the amount of levels which can be surpass the max level
+     * in the skill. For example, if this value is set to [3] on a skill that
+     * has is [99], that means that the level can be altered from [99] to [102].
      */
     fun alterCurrentLevel(skill: Int, value: Int, capValue: Int = 0) {
-        val newLevel = Math.max(0, Math.min(getCurrentLevel(skill) + value, getMaxLevel(skill) + capValue))
+        check(capValue == 0 || capValue < 0 && value < 0 || capValue > 0 && value >= 0) {
+            "Cap value and alter value must always be the same signum (+ or -)."
+        }
+        val altered = when {
+            capValue > 0 -> Math.min(getCurrentLevel(skill) + value, getMaxLevel(skill) + capValue)
+            capValue < 0 -> Math.max(getCurrentLevel(skill) + value, getMaxLevel(skill) + capValue)
+            else -> getCurrentLevel(skill) + value
+        }
+        val newLevel = Math.max(0, altered)
         val curLevel = getCurrentLevel(skill)
 
         if (newLevel != curLevel) {
@@ -105,11 +110,44 @@ class SkillSet(val maxSkills: Int) {
     }
 
     /**
+     * Decrease the level of [skill].
+     *
+     * @param skill the skill level to alter.
+     *
+     * @param value the amount of levels which to decrease from [skill], as a
+     * positive number.
+     *
+     * @param capped if true, the [skill] level cannot decrease further than
+     * [getMaxLevel] - [value].
+     */
+    fun decrementCurrentLevel(skill: Int, value: Int, capped: Boolean) = alterCurrentLevel(skill, -value, if (capped) -value else 0)
+
+    /**
+     * Increase the level of [skill].
+     *
+     * @param skill the skill level to alter.
+     *
+     * @param value the amount of levels which to increase from [skill], as a
+     * positive number.
+     *
+     * @param capped if true, the [skill] level cannot increase further than
+     * [getMaxLevel] + [value].
+     */
+    fun incrementCurrentLevel(skill: Int, value: Int, capped: Boolean) = alterCurrentLevel(skill, value, if (capped) value else 0)
+
+    /**
+     * Set [skill] level to [getMaxLevel].
+     */
+    fun restore(skill: Int) {
+        setCurrentLevel(skill, getMaxLevel(skill))
+    }
+
+    /**
      * Restore all skill levels back to normal.
      */
     fun restoreAll() {
         skills.forEach { skill ->
-            setCurrentLevel(skill.id, getMaxLevel(skill.id))
+            restore(skill.id)
         }
     }
 
