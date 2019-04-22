@@ -3,7 +3,6 @@ package gg.rsmod.plugins.service.sql
 import gg.rsmod.game.Server
 import gg.rsmod.game.model.World
 import gg.rsmod.game.model.entity.Client
-import gg.rsmod.game.service.Service
 import gg.rsmod.game.service.serializer.PlayerLoadResult
 import gg.rsmod.game.service.serializer.PlayerSerializerService
 import gg.rsmod.net.codec.login.LoginRequest
@@ -23,7 +22,7 @@ import org.jetbrains.exposed.sql.transactions.transaction
  * @author KyeT <okaydots@gmail.com>
  */
 
-class SQLService : Service, PlayerSerializerService()
+class SQLService : PlayerSerializerService()
 {
 
     override fun initSerializer(server: Server, world: World, serviceProperties: ServerProperties) {
@@ -86,6 +85,18 @@ class SQLService : Service, PlayerSerializerService()
                 configureNewPlayer(client, request)
                 client.uid = PlayerSaveController().createPlayer(client, client.world)
                 PlayerSaveController().savePlayer(client, client.world)
+            }
+
+            PlayerLoadResult.LOAD_ACCOUNT -> {}
+
+            PlayerLoadResult.INVALID_RECONNECTION -> {
+                log("${client.loginUsername} failed to re-identify with xtea keys.")
+            }
+
+            PlayerLoadResult.INVALID_CREDENTIALS -> {}
+
+            PlayerLoadResult.MALFORMED -> {
+                log("${client.loginUsername} failed to load player save.")
             }
         }
 
