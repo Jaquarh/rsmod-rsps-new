@@ -1,9 +1,11 @@
 package gg.rsmod.plugins.service.sql
 
+import com.google.gson.Gson
 import gg.rsmod.game.Server
 import gg.rsmod.game.model.PlayerUID
 import gg.rsmod.game.model.Tile
 import gg.rsmod.game.model.World
+import gg.rsmod.game.model.attr.AttributeKey
 import gg.rsmod.game.model.container.ItemContainer
 import gg.rsmod.game.model.entity.Client
 import gg.rsmod.game.model.interf.DisplayMode
@@ -12,13 +14,13 @@ import gg.rsmod.game.model.priv.Privilege
 import gg.rsmod.game.service.Service
 import gg.rsmod.game.service.serializer.PlayerLoadResult
 import gg.rsmod.game.service.serializer.PlayerSerializerService
+import gg.rsmod.game.service.serializer.json.JsonPlayerSerializer
 import gg.rsmod.net.codec.login.LoginRequest
-import gg.rsmod.plugins.service.sql.model.ItemContainerModel
-import gg.rsmod.plugins.service.sql.model.ItemModel
-import gg.rsmod.plugins.service.sql.model.PlayerModel
-import gg.rsmod.plugins.service.sql.model.SkillModel
+import gg.rsmod.plugins.service.sql.model.*
 import gg.rsmod.util.ServerProperties
 import mu.KLogging
+
+import gg.rsmod.plugins.service.sql.model.*
 
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -73,13 +75,19 @@ class SQLService : Service, PlayerSerializerService()
         // Start connection
         Database.connect("jdbc:$driverHost://$host:$port/$dbname", driver = driver, user = user, password = pswd)
 
-        // TODO("Create attributes model")
         // TODO("Create timers model")
         // TODO("Create varps model")
 
         // Create tables if not yet created
         transaction {
-            mutableListOf<Table>(PlayerModel, SkillModel, ItemContainerModel, ItemModel).forEach {
+            mutableListOf<Table>(
+                PlayerModel,
+                SkillModel,
+                ItemContainerModel,
+                ItemModel,
+                AttributesModel,
+                VarpModel
+            ).forEach {
                 table -> if(!table.exists()) {
                     SchemaUtils.create(table)
                     log("${table.tableName} did not exist. Created successfully...")
@@ -186,9 +194,37 @@ class SQLService : Service, PlayerSerializerService()
                 }
             }
 
-            // TODO("Load attributes")
+            // Load attributes
+
+            var attrQuery: Query? = null
+
+            transaction {
+                attrQuery = AttributesModel.select{
+                    AttributesModel.playerId eq client.uuid.toInt()
+                }
+            }
+
+            attrQuery!!.forEach {
+                val attribute = AttributeKey<Any>(it[AttributesModel.key])
+                client.attr[attribute] = it[AttributesModel.value]
+            }
+
             // TODO("Load timers")
-            // TODO("Load varps")
+
+
+
+            // Load varps
+            var varpQuery: Query? = null
+
+            transaction {
+                varpQuery = VarpModel.select {
+                    VarpModel.playerId eq client.uuid.toInt()
+                }
+            }
+
+            varpQuery!!.forEach {
+                client.varps.setState(it[VarpModel.varpId], it[VarpModel.state])
+            }
 
             return PlayerLoadResult.LOAD_ACCOUNT
         } else {
@@ -210,19 +246,19 @@ class SQLService : Service, PlayerSerializerService()
             PlayerModel.update ({
                 PlayerModel.id eq client.uuid.toInt()
             }) {
-                it[PlayerModel.username] = client.loginUsername
-                it[PlayerModel.hash] = client.passwordHash
-                it[PlayerModel.xteaKeyOne] = client.currentXteaKeys[0]
-                it[PlayerModel.xteaKeyTwo] = client.currentXteaKeys[1]
-                it[PlayerModel.xteaKeyThree] = client.currentXteaKeys[2]
-                it[PlayerModel.xteaKeyFour] = client.currentXteaKeys[3]
-                it[PlayerModel.displayName] = client.username
-                it[PlayerModel.x] = client.tile.x
-                it[PlayerModel.height] = client.tile.height
-                it[PlayerModel.z] = client.tile.z
-                it[PlayerModel.privilege] = client.privilege.id
-                it[PlayerModel.runEnergy] = client.runEnergy.toFloat()
-                it[PlayerModel.displayMode] = client.interfaces.displayMode.id
+                it[username] = client.loginUsername
+                it[hash] = client.passwordHash
+                it[xteaKeyOne] = client.currentXteaKeys[0]
+                it[xteaKeyTwo] = client.currentXteaKeys[1]
+                it[xteaKeyThree] = client.currentXteaKeys[2]
+                it[xteaKeyFour] = client.currentXteaKeys[3]
+                it[displayName] = client.username
+                it[x] = client.tile.x
+                it[height] = client.tile.height
+                it[z] = client.tile.z
+                it[privilege] = client.privilege.id
+                it[runEnergy] = client.runEnergy.toFloat()
+                it[displayMode] = client.interfaces.displayMode.id
             }
 
             // Update player skills
@@ -233,19 +269,68 @@ class SQLService : Service, PlayerSerializerService()
                     SkillModel.playerId eq client.uuid.toInt()
                     SkillModel.skill eq skill[SkillModel.skill]
                 }) {
-                    it[SkillModel.lvl] = client.getSkills().getCurrentLevel(skill[SkillModel.skill])
-                    it[SkillModel.xp] = client.getSkills().getCurrentXp(skill[SkillModel.skill]).toFloat()
+                    it[lvl] = client.getSkills().getCurrentLevel(skill[SkillModel.skill])
+                    it[xp] = client.getSkills().getCurrentXp(skill[SkillModel.skill]).toFloat()
                 }
             }
 
-            // TODO("Save item containers")
-            // TODO("Save attributes")
-            // TODO("Save timers")
-            // TODO("Save varps")
+            // Save item containers
+            getContainers(client).forEach { container ->
+                val containerKey = ItemContainerModel.select {
+                    ItemContainerModel.playerId eq client.uuid.toInt()
+                    ItemContainerModel.name eq container.name
+                }.first()[ItemContainerModel.id]
 
+                container.items.forEach { item ->
+                    ItemModel.update({
+                        ItemModel.containerId eq containerKey
+                    }) {
+                        it[index] = item.key
+                        it[itemId] = item.value.id
+                        it[amount] = item.value.amount
+                        // TODO("Handle saving item attributes")
+                        //it[attr] = item.value.getAttr().toString()
+                    }
+                }
+            }
+
+            // Save attributes
+            client.attr.toPersistentMap().forEach { attr ->
+                AttributesModel.update({
+                    AttributesModel.playerId eq client.uuid.toInt()
+                    AttributesModel.key eq attr.key
+                }) {
+                    // TODO("Handle saving attribute values of type [ANY]")
+                    it[value] = Gson().toJson(attr.value).toString()
+                }
+            }
+
+            // TODO("Save timers")
+
+            // Save varps
+            client.varps.getAll().forEach { varp ->
+                VarpModel.update({
+                    VarpModel.varpId eq varp.id
+                    VarpModel.playerId eq client.uuid.toInt()
+                }) {
+                    it[state] = varp.state
+                }
+            }
         }
 
         return saveClientData(client)
+    }
+
+    private fun getContainers(client: Client): List<JsonPlayerSerializer.PersistentContainer> {
+        val containers = mutableListOf<JsonPlayerSerializer.PersistentContainer>()
+
+        client.containers.forEach { key, container ->
+            if (!container.isEmpty) {
+                containers.add(JsonPlayerSerializer.PersistentContainer(key.name, container.toMap()))
+            }
+        }
+
+        return containers
     }
 
     private fun createPlayer(client: Client, world: World): PlayerUID {
