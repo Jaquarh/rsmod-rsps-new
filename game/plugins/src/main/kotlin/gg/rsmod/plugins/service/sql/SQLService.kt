@@ -81,11 +81,22 @@ class SQLService : PlayerSerializerService()
         val loadResponse = PlayerLoadController().loadPlayer(client, client.world, request)
 
         when(loadResponse) {
+
+            /*
+             * [PlayerLoadController.loadPlayer] will return [PlayerLoadResult.NEW_ACCOUNT]
+             * If the first query for retrieving the username does not have any rows.
+             */
+
             PlayerLoadResult.NEW_ACCOUNT -> {
                 configureNewPlayer(client, request)
                 client.uid = PlayerSaveController().createPlayer(client, client.world)
                 PlayerSaveController().savePlayer(client, client.world)
             }
+
+            /*
+             * Allows for debugging or logging on any other [PlayerLoadResult]
+             * response from the [PlayerLoadController.loadPlayer]
+             */
 
             PlayerLoadResult.LOAD_ACCOUNT -> {}
 
