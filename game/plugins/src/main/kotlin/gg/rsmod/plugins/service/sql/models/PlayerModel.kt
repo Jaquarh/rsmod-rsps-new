@@ -1,4 +1,4 @@
-package gg.rsmod.plugins.service.sql.model
+package gg.rsmod.plugins.service.sql.models
 
 import org.jetbrains.exposed.sql.*
 
@@ -10,7 +10,7 @@ object PlayerModel : Table("Players") {
     val height = integer("position_y")
     val z = integer("position_z")
     val privilege = integer("privilege").default(1)
-    val runEnergy = float("run_energy").default(0.toFloat())
+    val runEnergy = float("run_energy").default(100.toFloat())
     val displayMode = integer("display_mode").default(0)
     val hash = varchar("password_hash", 60)
     val xteaKeyOne = integer("xtea_one")

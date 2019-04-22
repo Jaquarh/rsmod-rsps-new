@@ -1,4 +1,4 @@
-package gg.rsmod.plugins.service.sql.model
+package gg.rsmod.plugins.service.sql.models
 
 import org.jetbrains.exposed.sql.*
 
