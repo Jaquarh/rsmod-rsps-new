@@ -58,7 +58,7 @@ class SQLService : PlayerSerializerService()
 
         // Create tables if not yet created
         transaction {
-            mutableListOf<Table>(
+            mutableListOf(
                 PlayerModel,
                 SkillModel,
                 ItemContainerModel,
