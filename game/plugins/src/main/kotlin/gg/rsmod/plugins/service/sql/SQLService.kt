@@ -98,14 +98,18 @@ class SQLService : PlayerSerializerService()
              * response from the [PlayerLoadController.loadPlayer]
              */
 
+            // Account loaded successfully
             PlayerLoadResult.LOAD_ACCOUNT -> {}
 
+            // Account existed but xtea keys do not match
             PlayerLoadResult.INVALID_RECONNECTION -> {
                 log("${client.loginUsername} failed to re-identify with xtea keys.")
             }
 
+            // Account existed but credentials did not match
             PlayerLoadResult.INVALID_CREDENTIALS -> {}
 
+            // Account existed but was malformed
             PlayerLoadResult.MALFORMED -> {
                 log("${client.loginUsername} failed to load player save.")
             }
