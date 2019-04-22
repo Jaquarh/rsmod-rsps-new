@@ -140,7 +140,7 @@ class PlayerSaveController : Controller() {
 
             // Since there are 22 skills
 
-            for(i in 0..22) {
+            for(i in 0 until client.getSkills().maxSkills) {
                 SkillModel.insert {
                     it[this.skill] = i
                     it[this.lvl] = 1
