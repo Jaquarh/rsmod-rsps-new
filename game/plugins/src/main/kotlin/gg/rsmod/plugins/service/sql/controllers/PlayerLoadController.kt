@@ -38,18 +38,18 @@ class PlayerLoadController : Controller() {
             }.firstOrNull()
         } ?: return PlayerLoadResult.NEW_ACCOUNT
 
-        previousXteas[0] = player?.get(PlayerModel.xteaKeyOne)!!
-        previousXteas[1] = player?.get(PlayerModel.xteaKeyTwo)!!
-        previousXteas[2] = player?.get(PlayerModel.xteaKeyThree)!!
-        previousXteas[3] = player?.get(PlayerModel.xteaKeyFour)!!
-        uid = PlayerUID(player?.get(PlayerModel.id))
-        username = player?.get(PlayerModel.username)
-        passwordHash = player?.get(PlayerModel.hash)
-        displayName = player?.get(PlayerModel.displayName)
-        displayMode = DisplayMode.values.firstOrNull { it.id == player?.get(PlayerModel.displayMode) } ?: DisplayMode.FIXED
-        privilege = world.privileges.get(player?.get(PlayerModel.privilege)!!)
-        tile = Tile(player?.get(PlayerModel.x), player?.get(PlayerModel.height), player?.get(PlayerModel.z))
-        runEnergy = player?.get(PlayerModel.runEnergy).toDouble()
+        previousXteas[0] = player[PlayerModel.xteaKeyOne]
+        previousXteas[1] = player[PlayerModel.xteaKeyTwo]
+        previousXteas[2] = player[PlayerModel.xteaKeyThree]
+        previousXteas[3] = player[PlayerModel.xteaKeyFour]
+        uid = PlayerUID(player[PlayerModel.id])
+        username = player[PlayerModel.username]
+        passwordHash = player[PlayerModel.hash]
+        displayName = player[PlayerModel.displayName]
+        displayMode = DisplayMode.values.firstOrNull { it.id == player[PlayerModel.displayMode] } ?: DisplayMode.FIXED
+        privilege = world.privileges.get(player[PlayerModel.privilege])
+        tile = Tile(player[PlayerModel.x], player[PlayerModel.height], player[PlayerModel.z])
+        runEnergy = player[PlayerModel.runEnergy].toDouble()
 
         if (!request.reconnecting) {
             if (!BCrypt.checkpw(request.password, passwordHash)) {
@@ -78,10 +78,10 @@ class PlayerLoadController : Controller() {
          */
 
         transaction {
-            SkillModel.select { SkillModel.playerId eq player?.get(PlayerModel.id) }
+            SkillModel.select { SkillModel.playerId eq player[PlayerModel.id] }
         }.forEach { skill ->
-            client.getSkills().setXp(skill?.get(SkillModel.skill), skill?.get(SkillModel.xp).toDouble())
-            client.getSkills().setCurrentLevel(skill?.get(SkillModel.skill), skill?.get(SkillModel.lvl))
+            client.getSkills().setXp(skill[SkillModel.skill], skill[SkillModel.xp].toDouble())
+            client.getSkills().setCurrentLevel(skill[SkillModel.skill], skill[SkillModel.lvl])
         }
 
         /*
@@ -94,20 +94,20 @@ class PlayerLoadController : Controller() {
          */
 
         transaction {
-            ItemContainerModel.select { ItemContainerModel.playerId eq player?.get(PlayerModel.id) }
+            ItemContainerModel.select { ItemContainerModel.playerId eq player[PlayerModel.id] }
         }.forEach { container ->
-            val key = world.plugins.containerKeys.firstOrNull { other -> other.name == container?.get(ItemContainerModel.name) }
+            val key = world.plugins.containerKeys.firstOrNull { other -> other.name == container[ItemContainerModel.name] }
                     ?: return@forEach
 
             val cont = if (client.containers.containsKey(key)) client.containers[key] else {
                 client.containers[key] = ItemContainer(client.world.definitions, key)
                 client.containers[key]
-            }!!
+            } ?: return@forEach
 
             transaction {
-                ItemModel.select { ItemModel.containerId eq container?.get(ItemContainerModel.id) }
+                ItemModel.select { ItemModel.containerId eq container[ItemContainerModel.id] }
             }.forEach { item ->
-                cont[item?.get(ItemModel.index)] = Item(item?.get(ItemModel.itemId), item?.get(ItemModel.amount))
+                cont[item[ItemModel.index]] = Item(item[ItemModel.itemId], item[ItemModel.amount])
             }
         }
 
@@ -120,10 +120,10 @@ class PlayerLoadController : Controller() {
          */
 
         transaction {
-            AttributesModel.select { AttributesModel.playerId eq player?.get(PlayerModel.id) }
+            AttributesModel.select { AttributesModel.playerId eq player[PlayerModel.id] }
         }.forEach { attribute ->
-            val attr = AttributeKey<Any>(attribute?.get(AttributesModel.key))
-            client.attr[attr] = attribute?.get(AttributesModel.value)
+            val attr = AttributeKey<Any>(attribute[AttributesModel.key])
+            client.attr[attr] = attribute[AttributesModel.value]
         }
 
         /*
@@ -135,15 +135,15 @@ class PlayerLoadController : Controller() {
          */
 
         transaction {
-            TimerModel.select { TimerModel.playerId eq player?.get(PlayerModel.id) }
+            TimerModel.select { TimerModel.playerId eq player[PlayerModel.id] }
         }.forEach { timer ->
-            var time = timer?.get(TimerModel.timeLeft)
-            if (timer?.get(TimerModel.tickOffline)) {
-                val elapsed = System.currentTimeMillis() - timer?.get(TimerModel.currentMs)
+            var time = timer[TimerModel.timeLeft]
+            if (timer[TimerModel.tickOffline]) {
+                val elapsed = System.currentTimeMillis() - timer[TimerModel.currentMs]
                 val ticks = (elapsed / client.world.gameContext.cycleTime).toInt()
                 time -= ticks
             }
-            val key = TimerKey(timer?.get(TimerModel.identifier), timer?.get(TimerModel.tickOffline))
+            val key = TimerKey(timer[TimerModel.identifier], timer[TimerModel.tickOffline])
             client.timers[key] = Math.max(0, time)
         }
 
@@ -156,9 +156,9 @@ class PlayerLoadController : Controller() {
          */
 
         transaction {
-            VarpModel.select { VarpModel.playerId eq player?.get(PlayerModel.id) }
+            VarpModel.select { VarpModel.playerId eq player[PlayerModel.id] }
         }.forEach { varp ->
-            client.varps.setState(varp?.get(VarpModel.varpId), varp?.get(VarpModel.state))
+            client.varps.setState(varp[VarpModel.varpId], varp[VarpModel.state])
         }
 
         /*
