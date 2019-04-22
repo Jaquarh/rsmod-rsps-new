@@ -64,6 +64,8 @@ class LoginService : Service {
     }
 
     fun successfulLogin(client: Client, encodeRandom: IsaacRandom, decodeRandom: IsaacRandom) {
+        logger.info { "Login Service has been contacted." }
+
         val gameSystem = GameSystem(channel = client.channel, client = client, service = client.world.getService(GameService::class.java)!!)
 
         client.gameSystem = gameSystem
