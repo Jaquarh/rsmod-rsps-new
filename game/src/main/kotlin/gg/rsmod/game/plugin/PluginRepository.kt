@@ -19,6 +19,8 @@ import gg.rsmod.game.model.entity.Pawn
 import gg.rsmod.game.model.entity.Player
 import gg.rsmod.game.model.shop.Shop
 import gg.rsmod.game.model.timer.TimerKey
+import gg.rsmod.game.service.Service
+import gg.rsmod.util.ServerProperties
 import io.github.classgraph.ClassGraph
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap
@@ -331,12 +333,20 @@ class PluginRepository(val world: World) {
      */
     internal val itemSpawns = mutableListOf<GroundItem>()
 
+    /**
+     * A map of [NpcCombatDef]s that have been set by [KotlinPlugin]s.
+     */
     internal val npcCombatDefs = Int2ObjectOpenHashMap<NpcCombatDef>()
 
     /**
      * Holds all valid shops set from plugins for this [PluginRepository].
      */
     internal val shops = Object2ObjectOpenHashMap<String, Shop>()
+
+    /**
+     * A list of [Service]s that have been requested for loading by a [KotlinPlugin].
+     */
+    internal val services = mutableListOf<Service>()
 
     /**
      * Holds all container keys set from plugins for this [PluginRepository].
@@ -350,17 +360,24 @@ class PluginRepository(val world: World) {
     /**
      * Initiates and populates all our plugins.
      */
-    fun init(server: Server, jarPluginsDirectory: String) {
+    fun init(server: Server, world: World, jarPluginsDirectory: String) {
         loadPlugins(server, jarPluginsDirectory)
+        loadServices(server, world)
         spawnEntities()
     }
 
-    internal fun loadPlugins(server: Server, jarPluginsDirectory: String) {
+    /**
+     * Locate and load all [KotlinPlugin]s.
+     */
+    private fun loadPlugins(server: Server, jarPluginsDirectory: String) {
         scanPackageForPlugins(server, world)
         scanJarDirectoryForPlugins(server, world, Paths.get(jarPluginsDirectory))
     }
 
-    fun scanPackageForPlugins(server: Server, world: World) {
+    /**
+     * Scan our local package to find any and all [KotlinPlugin]s.
+     */
+    private fun scanPackageForPlugins(server: Server, world: World) {
         ClassGraph().enableAllInfo().whitelistModules().scan().use { result ->
             val plugins = result.getSubclasses(KotlinPlugin::class.java.name).directOnly()
             plugins.forEach { p ->
@@ -371,7 +388,10 @@ class PluginRepository(val world: World) {
         }
     }
 
-    fun scanJarDirectoryForPlugins(server: Server, world: World, directory: Path) {
+    /**
+     * Scan directory for any JAR file which may contain plugins.
+     */
+    private fun scanJarDirectoryForPlugins(server: Server, world: World, directory: Path) {
         if (Files.exists(directory)) {
             Files.walk(directory).forEach { path ->
                 if (!path.fileName.toString().endsWith(".jar")) {
@@ -382,7 +402,11 @@ class PluginRepository(val world: World) {
         }
     }
 
-    fun scanJarForPlugins(server: Server, world: World, path: Path) {
+    /**
+     * Scan JAR located in [path] for any and all valid [KotlinPlugin]s and
+     * initialise them.
+     */
+    private fun scanJarForPlugins(server: Server, world: World, path: Path) {
         val urls = arrayOf(path.toFile().toURI().toURL())
         val classLoader = URLClassLoader(urls, PluginRepository::class.java.classLoader)
 
@@ -396,15 +420,53 @@ class PluginRepository(val world: World) {
         }
     }
 
+    /**
+     * Load and initialise [Service]s given to us by [KotlinPlugin]s.
+     */
+    private fun loadServices(server: Server, world: World) {
+        services.forEach { service ->
+            service.init(server, world, ServerProperties())
+            world.services.add(service)
+        }
+
+        services.forEach { service ->
+            service.postLoad(server, world)
+        }
+    }
+
+    /**
+     * Spawn any and all [gg.rsmod.game.model.entity.Entity]s given to us by
+     * [KotlinPlugin]s.
+     */
     private fun spawnEntities() {
         npcSpawns.forEach { npc -> world.spawn(npc) }
-        npcSpawns.clear()
-
         objSpawns.forEach { obj -> world.spawn(obj) }
-        objSpawns.clear()
-
         itemSpawns.forEach { item -> world.spawn(item) }
-        itemSpawns.clear()
+    }
+
+    /**
+     * Gracefully terminate this repository.
+     */
+    fun terminate() {
+        npcSpawns.forEach { npc ->
+            if (npc.isSpawned()) {
+                world.remove(npc)
+            }
+        }
+
+        objSpawns.forEach { obj ->
+            if (obj.isSpawned(world)) {
+                world.remove(obj)
+            }
+        }
+
+        itemSpawns.forEach { item ->
+            if (item.isSpawned(world)) {
+                world.remove(item)
+            }
+        }
+
+        world.services.removeAll(services)
     }
 
     /**

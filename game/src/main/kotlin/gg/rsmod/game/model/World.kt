@@ -82,7 +82,7 @@ class World(val gameContext: GameContext, val devContext: DevContext) {
      * A collection of our [Service]s specified in our game [ServerProperties]
      * files.
      */
-    private val services = mutableListOf<Service>()
+    internal val services = mutableListOf<Service>()
 
     lateinit var coroutineDispatcher: CoroutineDispatcher
 
@@ -344,12 +344,6 @@ class World(val gameContext: GameContext, val devContext: DevContext) {
         players.forEach { p ->
             p.write(UpdateRebootTimerMessage(cycles))
         }
-    }
-
-    fun runNonBlockingTask(task: CoroutineScope.() -> Unit) {
-    }
-
-    fun runBlockingTask(task: CoroutineScope.() -> Unit) {
     }
 
     fun register(p: Player): Boolean {
