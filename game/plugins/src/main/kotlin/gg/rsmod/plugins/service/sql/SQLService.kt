@@ -54,7 +54,7 @@ class SQLService : PlayerSerializerService()
         }
 
         // Start connection
-        Database.connect("jdbc:$driverHost://$host:$port/$dbname", driver = driver, user = user, password = pswd)
+        Database.connect("jdbc:$driverHost://$host:$port/$dbname?useSSL=false", driver = driver, user = user, password = pswd)
 
         // Create tables if not yet created
         transaction {
@@ -91,6 +91,7 @@ class SQLService : PlayerSerializerService()
                 configureNewPlayer(client, request)
                 client.uid = PlayerSaveController().createPlayer(client, client.world)
                 PlayerSaveController().savePlayer(client, client.world)
+                logger.info { "${client.loginUsername} has been created and saved successfully." }
             }
 
             /*
@@ -114,6 +115,8 @@ class SQLService : PlayerSerializerService()
                 log("${client.loginUsername} failed to load player save.")
             }
         }
+
+        logger.info { "${client.loginUsername} is now being forwarded to the [LoginService]." }
 
         return loadResponse
     }
