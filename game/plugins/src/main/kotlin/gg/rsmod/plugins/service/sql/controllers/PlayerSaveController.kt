@@ -97,18 +97,22 @@ class PlayerSaveController : Controller() {
                 }
 
                 if (itemKey != null) {
-                    ItemModel.update({
-                        ItemModel.index eq itemKey[ItemModel.index]
-                        ItemModel.containerId eq containerKey
-                    }) {
-                        it[itemId] = item.value.id
-                        it[amount] = item.value.amount
+                    transaction {
+                        ItemModel.update({
+                            ItemModel.index eq itemKey[ItemModel.index]
+                            ItemModel.containerId eq containerKey
+                        }) {
+                            it[itemId] = item.value.id
+                            it[amount] = item.value.amount
+                        }
                     }
                 } else {
-                    ItemModel.insert {
-                        it[index] = item.key
-                        it[itemId] = item.value.id
-                        it[amount] = item.value.amount
+                    transaction {
+                        ItemModel.insert {
+                            it[index] = item.key
+                            it[itemId] = item.value.id
+                            it[amount] = item.value.amount
+                        }
                     }
                 }
 
@@ -129,17 +133,21 @@ class PlayerSaveController : Controller() {
                     }
 
                     if (attrKey != null) {
-                        ItemAttributeModel.update({
-                            ItemAttributeModel.id eq attrKey[ItemAttributeModel.id]
-                        }) { upd ->
-                            upd[value] = attr.value.toString()
+                        transaction {
+                            ItemAttributeModel.update({
+                                ItemAttributeModel.id eq attrKey[ItemAttributeModel.id]
+                            }) { upd ->
+                                upd[value] = attr.value.toString()
+                            }
                         }
                     } else {
-                        ItemAttributeModel.insert {
-                            it[this.itemId] = item.value.id
-                            it[this.key] = attr.key.name
-                            it[this.playerId] = Integer.parseInt(client.uid.value.toString())
-                            it[this.value] = attr.value.toString()
+                        transaction {
+                            ItemAttributeModel.insert {
+                                it[this.itemId] = item.value.id
+                                it[this.key] = attr.key.name
+                                it[this.playerId] = Integer.parseInt(client.uid.value.toString())
+                                it[this.value] = attr.value.toString()
+                            }
                         }
                     }
 
@@ -166,16 +174,20 @@ class PlayerSaveController : Controller() {
             }
 
             if(attrKey != null) {
-                AttributesModel.update({
-                    AttributesModel.id eq attrKey[AttributesModel.id]
-                }) {
-                    it[value] = attr.value.toString()
+                transaction {
+                    AttributesModel.update({
+                        AttributesModel.id eq attrKey[AttributesModel.id]
+                    }) {
+                        it[value] = attr.value.toString()
+                    }
                 }
             } else {
-                AttributesModel.insert {
-                    it[this.key] = attr.key
-                    it[this.playerId] = Integer.parseInt(client.uid.value.toString())
-                    it[this.value] = attr.value.toString()
+                transaction {
+                    AttributesModel.insert {
+                        it[this.key] = attr.key
+                        it[this.playerId] = Integer.parseInt(client.uid.value.toString())
+                        it[this.value] = attr.value.toString()
+                    }
                 }
             }
         }
@@ -200,20 +212,24 @@ class PlayerSaveController : Controller() {
                 }
 
                 if(timerKey != null) {
-                    TimerModel.update({
-                        TimerModel.id eq timerKey[TimerModel.id]
-                    }) {
-                        it[currentMs] = timer.currentMs
-                        it[tickOffline] = timer.tickOffline
-                        it[timeLeft] = timer.timeLeft
+                    transaction {
+                        TimerModel.update({
+                            TimerModel.id eq timerKey[TimerModel.id]
+                        }) {
+                            it[currentMs] = timer.currentMs
+                            it[tickOffline] = timer.tickOffline
+                            it[timeLeft] = timer.timeLeft
+                        }
                     }
                 } else {
-                    TimerModel.insert {
-                        it[this.currentMs] = timer.currentMs
-                        it[this.tickOffline] = timer.tickOffline
-                        it[this.timeLeft] = timer.timeLeft
-                        it[this.playerId] = Integer.parseInt(client.uid.value.toString())
-                        it[this.identifier] = timer.identifier.toString()
+                    transaction {
+                        TimerModel.insert {
+                            it[this.currentMs] = timer.currentMs
+                            it[this.tickOffline] = timer.tickOffline
+                            it[this.timeLeft] = timer.timeLeft
+                            it[this.playerId] = Integer.parseInt(client.uid.value.toString())
+                            it[this.identifier] = timer.identifier.toString()
+                        }
                     }
                 }
             }
@@ -238,16 +254,20 @@ class PlayerSaveController : Controller() {
             }
 
             if(varpKey != null) {
-                VarpModel.update({
-                    VarpModel.id eq varpKey[VarpModel.id]
-                }) {
-                    it[state] = varp.state
+                transaction {
+                    VarpModel.update({
+                        VarpModel.id eq varpKey[VarpModel.id]
+                    }) {
+                        it[state] = varp.state
+                    }
                 }
             } else {
-                VarpModel.insert {
-                    it[this.state] = varp.state
-                    it[this.playerId] = Integer.parseInt(client.uid.value.toString())
-                    it[this.varpId] = varp.id
+                transaction {
+                    VarpModel.insert {
+                        it[this.state] = varp.state
+                        it[this.playerId] = Integer.parseInt(client.uid.value.toString())
+                        it[this.varpId] = varp.id
+                    }
                 }
             }
         }
