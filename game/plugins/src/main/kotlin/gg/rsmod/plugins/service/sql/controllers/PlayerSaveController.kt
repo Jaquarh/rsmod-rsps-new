@@ -292,7 +292,7 @@ class PlayerSaveController : Controller() {
                     it[this.skill] = i
                     it[this.lvl] = 1
                     it[this.xp] = 0.toFloat()
-                    it[this.playerId] = Integer.parseInt(client.uid.value.toString())
+                    it[this.playerId] = player
                 }
             }
 
@@ -300,7 +300,7 @@ class PlayerSaveController : Controller() {
 
             ItemContainerModel.insert {
                 it[this.name] = "inventory"
-                it[this.playerId] = Integer.parseInt(client.uid.value.toString())
+                it[this.playerId] = player
             }
         }
 
