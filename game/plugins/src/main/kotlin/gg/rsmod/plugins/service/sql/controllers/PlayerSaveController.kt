@@ -292,6 +292,7 @@ class PlayerSaveController : Controller() {
                     it[this.skill] = i
                     it[this.lvl] = 1
                     it[this.xp] = 0.toFloat()
+                    it[this.playerId] = Integer.parseInt(client.uid.value.toString())
                 }
             }
 
