@@ -116,7 +116,7 @@ class SQLService : PlayerSerializerService()
         client.username = serialize.player[PlayerModel.displayName]
         client.runEnergy = serialize.player[PlayerModel.runEnergy].toDouble()
         client.privilege = client.world.privileges.get(serialize.player[PlayerModel.privilege]) ?: Privilege.DEFAULT
-        client.tile = Tile(serialize.player[PlayerModel.x], serialize.player[PlayerModel.height], serialize.player[PlayerModel.z])
+        client.tile = Tile(serialize.player[PlayerModel.x], serialize.player[PlayerModel.z], serialize.player[PlayerModel.height])
         client.interfaces.displayMode = DisplayMode.values.firstOrNull { it.id == serialize.player[PlayerModel.displayMode] } ?: DisplayMode.FIXED
 
         // Load skills into client
