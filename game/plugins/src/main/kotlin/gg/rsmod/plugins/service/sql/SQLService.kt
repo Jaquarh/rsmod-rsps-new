@@ -89,54 +89,6 @@ class SQLService : PlayerSerializerService()
 
     override fun loadClientData(client: Client, request: LoginRequest): PlayerLoadResult {
 
-        /*val loadResponse = PlayerLoadController().loadPlayer(client, client.world, request)
-
-        when(loadResponse) {
-
-            /*
-             * [PlayerLoadController.loadPlayer] will return [PlayerLoadResult.NEW_ACCOUNT]
-             * If the first query for retrieving the username does not have any rows.
-             */
-
-            PlayerLoadResult.NEW_ACCOUNT -> {
-                configureNewPlayer(client, request)
-                client.uid = PlayerSaveController().createPlayer(client, client.world)
-
-                logger.info { "${client.loginUsername} has been created and saved successfully." }
-
-                // Added try catch in-case there is an error not being caught
-                try { PlayerSaveController().savePlayer(client, client.world) }
-                catch (e: Exception) { logger.info { e.message } }
-
-                logger.info { "${client.loginUsername} has saved successfully." }
-            }
-
-            /*
-             * Allows for debugging or logging on any other [PlayerLoadResult]
-             * response from the [PlayerLoadController.loadPlayer]
-             */
-
-            // Account loaded successfully
-            PlayerLoadResult.LOAD_ACCOUNT -> {}
-
-            // Account existed but xtea keys do not match
-            PlayerLoadResult.INVALID_RECONNECTION -> {
-                log("${client.loginUsername} failed to re-identify with xtea keys.")
-            }
-
-            // Account existed but credentials did not match
-            PlayerLoadResult.INVALID_CREDENTIALS -> {}
-
-            // Account existed but was malformed
-            PlayerLoadResult.MALFORMED -> {
-                log("${client.loginUsername} failed to load player save.")
-            }
-        }
-
-        logger.info { "${client.loginUsername} is now being forwarded to the [LoginService]." }
-
-        return loadResponse*/
-
         val serialize:SQLSerializer = LoadController().loadPlayer(client)
                 ?: return configureNewAccount(client, request)
 
@@ -230,9 +182,6 @@ class SQLService : PlayerSerializerService()
     }
 
     override fun saveClientData(client: Client): Boolean {
-        /*PlayerSaveController().savePlayer(client, client.world)
-        return true*/
-
         return SaveController().savePlayer(client)
     }
 
