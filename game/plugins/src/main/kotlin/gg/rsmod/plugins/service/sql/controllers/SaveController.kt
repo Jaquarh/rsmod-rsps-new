@@ -90,6 +90,16 @@ class SaveController : Controller() {
                 it[displayMode] = client.interfaces.displayMode.id
             }
 
+            // Save the skills
+            serialize.skillModels.forEach { skill ->
+                SkillModel.update({
+                    SkillModel.id eq skill[SkillModel.id]
+                }) {
+                    it[this.lvl] = client.getSkills().getCurrentLevel(skill[SkillModel.skill])
+                    it[this.xp] = client.getSkills().getCurrentXp(skill[SkillModel.skill]).toFloat()
+                }
+            }
+
             /*
              * Save the item containers, item attributes and items
              */

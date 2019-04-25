@@ -249,6 +249,14 @@ class PluginRepository(val world: World) {
     private val itemOnItemPlugins = Int2ObjectOpenHashMap<Plugin.() -> Unit>()
 
     /**
+     * A map that contains magic spell on item plugins.
+     *
+     * Key: (fromComponentHash << 32) | toComponentHash
+     * Value: plugin
+     */
+    private val spellOnItemPlugins = Long2ObjectOpenHashMap<Plugin.() -> Unit>()
+
+    /**
      * A map that contains npcs and any associated menu-click and its respective
      * plugin logic, if any (would not be in the map if it doesn't have a plugin).
      */
@@ -1078,6 +1086,24 @@ class PluginRepository(val world: World) {
 
         val hash = (max shl 16) or min
         val plugin = itemOnItemPlugins[hash] ?: return false
+        p.executePlugin(plugin)
+        return true
+    }
+
+    fun bindSpellOnItem(fromComponentHash: Int, toComponentHash: Int, plugin: Plugin.() -> Unit) {
+        val hash: Long = (fromComponentHash.toLong() shl 32) or toComponentHash.toLong()
+        if (spellOnItemPlugins.containsKey(hash)) {
+            val exception = RuntimeException("Spell on item already bound to a plugin: from=[${fromComponentHash shr 16}, ${fromComponentHash or 0xFFFF}], to=[${toComponentHash shr 16}, ${toComponentHash or 0xFFFF}]")
+            logger.error(exception) {}
+            throw exception
+        }
+        spellOnItemPlugins[hash] = plugin
+        pluginCount++
+    }
+
+    fun executeSpellOnItem(p: Player, fromComponentHash: Int, toComponentHash: Int): Boolean {
+        val hash: Long = (fromComponentHash.toLong() shl 32) or toComponentHash.toLong()
+        val plugin = spellOnItemPlugins[hash] ?: return false
         p.executePlugin(plugin)
         return true
     }

@@ -6,7 +6,7 @@ import mu.KLogging
 
 abstract class Controller {
 
-    private val debug = true
+    private val debug = false
 
     protected fun getContainers(client: Client): List<JsonPlayerSerializer.PersistentContainer> {
         val containers = mutableListOf<JsonPlayerSerializer.PersistentContainer>()

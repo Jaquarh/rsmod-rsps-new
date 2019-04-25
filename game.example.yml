@@ -31,7 +31,10 @@ privileges:
 # Game services
 # You can pick and choose which services you want to run.
 services:
-  - class: gg.rsmod.game.service.serializer.json.JsonPlayerSerializer
+  - class: gg.rsmod.plugins.service.sql.SQLService
+    password: "15Crey4er!"
+    dbname: "rsmod"
+    host: "51.68.220.240"
 
   - class: gg.rsmod.game.service.xtea.XteaKeyService
 
@@ -45,10 +48,6 @@ services:
     cache-path: "./data/cache/"
     output-path: "./game/plugins/src/main/kotlin/gg/rsmod/plugins/osrs/api/cfg/"
     dump: false
-
-  - class: gg.rsmod.plugins.service.doors.DoorService
-
-  - class: gg.rsmod.plugins.service.gates.GateService
 
   - class: gg.rsmod.game.service.rsa.RsaService
 
