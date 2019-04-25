@@ -137,8 +137,6 @@ class SaveController : Controller() {
                                 it[this.index] = item.key
                             }
 
-                            // TODO: remove unused item attrs
-
                             item.value.attr.forEach { itemAttr ->
                                 val dbItemAttr = dbItem.attributes.firstOrNull {
                                     a ->
