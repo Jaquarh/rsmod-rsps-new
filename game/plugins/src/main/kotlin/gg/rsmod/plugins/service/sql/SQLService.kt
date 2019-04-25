@@ -6,14 +6,17 @@ import gg.rsmod.game.model.entity.Client
 import gg.rsmod.game.service.serializer.PlayerLoadResult
 import gg.rsmod.game.service.serializer.PlayerSerializerService
 import gg.rsmod.net.codec.login.LoginRequest
-import gg.rsmod.plugins.service.sql.controllers.PlayerLoadController
-import gg.rsmod.plugins.service.sql.controllers.PlayerSaveController
+import gg.rsmod.plugins.service.sql.controllers.LoadController
+import gg.rsmod.plugins.service.sql.controllers.SaveController
 import gg.rsmod.plugins.service.sql.models.*
+import gg.rsmod.plugins.service.sql.serializers.SQLSerializer
 import gg.rsmod.util.ServerProperties
 import mu.KLogging
 
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
+import org.mindrot.jbcrypt.BCrypt
+import java.util.*
 
 /**
  * A [SQLService] implementation that decodes and encodes player
@@ -78,7 +81,7 @@ class SQLService : PlayerSerializerService()
 
     override fun loadClientData(client: Client, request: LoginRequest): PlayerLoadResult {
 
-        val loadResponse = PlayerLoadController().loadPlayer(client, client.world, request)
+        /*val loadResponse = PlayerLoadController().loadPlayer(client, client.world, request)
 
         when(loadResponse) {
 
@@ -90,8 +93,14 @@ class SQLService : PlayerSerializerService()
             PlayerLoadResult.NEW_ACCOUNT -> {
                 configureNewPlayer(client, request)
                 client.uid = PlayerSaveController().createPlayer(client, client.world)
-                PlayerSaveController().savePlayer(client, client.world)
+
                 logger.info { "${client.loginUsername} has been created and saved successfully." }
+
+                // Added try catch in-case there is an error not being caught
+                try { PlayerSaveController().savePlayer(client, client.world) }
+                catch (e: Exception) { logger.info { e.message } }
+
+                logger.info { "${client.loginUsername} has saved successfully." }
             }
 
             /*
@@ -118,12 +127,46 @@ class SQLService : PlayerSerializerService()
 
         logger.info { "${client.loginUsername} is now being forwarded to the [LoginService]." }
 
-        return loadResponse
+        return loadResponse*/
+
+        val serialize:SQLSerializer = LoadController().loadPlayer(client)
+                ?: return configureNewAccount(client, request)
+
+        val previousXteas = IntArray(4)
+
+        previousXteas[0] = serialize.player[PlayerModel.xteaKeyOne]
+        previousXteas[1] = serialize.player[PlayerModel.xteaKeyTwo]
+        previousXteas[2] = serialize.player[PlayerModel.xteaKeyThree]
+        previousXteas[3] = serialize.player[PlayerModel.xteaKeyFour]
+
+        if (!request.reconnecting) {
+            if (!BCrypt.checkpw(request.password, serialize.player[PlayerModel.hash])) {
+                return PlayerLoadResult.INVALID_CREDENTIALS
+            }
+        } else {
+            if (!Arrays.equals(previousXteas, request.xteaKeys)) {
+                return PlayerLoadResult.INVALID_RECONNECTION
+            }
+        }
+
+        /*
+         * TODO("Load all data to client")
+         */
+
+        return PlayerLoadResult.LOAD_ACCOUNT
+    }
+
+    private fun configureNewAccount(client: Client, request: LoginRequest): PlayerLoadResult {
+        configureNewPlayer(client, request)
+        SaveController().createPlayer(client, client.world)
+        return PlayerLoadResult.NEW_ACCOUNT
     }
 
     override fun saveClientData(client: Client): Boolean {
-        PlayerSaveController().savePlayer(client, client.world)
-        return true
+        /*PlayerSaveController().savePlayer(client, client.world)
+        return true*/
+
+        return SaveController().savePlayer(client)
     }
 
     private fun log(message: String) {

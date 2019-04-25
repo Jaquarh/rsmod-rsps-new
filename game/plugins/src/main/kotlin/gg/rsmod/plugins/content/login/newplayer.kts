@@ -9,14 +9,14 @@ val npcId = Npcs.QUEST_GUIDE
 val startItems = true
 
 val starterItems= listOf(
-        Item(Items.COINS, 200000),
+        Item(Items.COINS, 200000)/*,
         Item(Items.COOKED_CHICKEN, 5),
         Item(Items.BRONZE_PLATEBODY, 1),
         Item(Items.BRONZE_PLATELEGS, 1),
         Item(Items.BRONZE_FULL_HELM, 1),
         Item(Items.BRONZE_SWORD, 1),
         Item(Items.AIR_RUNE, 30),
-        Item(Items.MIND_RUNE, 30)
+        Item(Items.MIND_RUNE, 30)*/
 )
 
 on_login {
