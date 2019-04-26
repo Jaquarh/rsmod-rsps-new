@@ -1,4 +1,4 @@
-val bonds = listOf(Items.OLD_SCHOOL_BOND, Items.OLD_SCHOOL_BOND_13191, Items.OLD_SCHOOL_BOND_UNTRADEABLE)
+val bonds = listOf(Items.OLD_SCHOOL_BOND, Items.OLD_SCHOOL_BOND_UNTRADEABLE)
 val attrKey = AttributeKey<Any>("OLD_SCHOOL_BONDS")
 
 bonds.forEach { item ->

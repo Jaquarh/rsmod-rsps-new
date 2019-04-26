@@ -6,9 +6,9 @@ import gg.rsmod.game.model.World
 import spark.Request
 import spark.Response
 
-class OnlinePlayersController(req: Request, resp: Response, auth: Boolean) : Controller(req, resp, auth) {
+class OnlinePlayersController(req: Request, resp: Response, auth: Boolean) {
 
-    override fun init(world: World): JsonObject {
+    fun init(world: World): JsonObject {
 
         val obj = JsonObject()
         val players = JsonArray()
