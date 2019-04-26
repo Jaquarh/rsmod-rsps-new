@@ -74,11 +74,11 @@ suspend fun tour(it: QueueTask) {
 suspend fun startItems(it: QueueTask) {
     it.chatNpc("Thanks for choosing ${world.gameContext.name}, please accept these starter items!", animation = 568, npc = npcId, title = "${world.gameContext.name} Guide")
 
-    starterItems.forEach {
+    /*starterItems.forEach {
         item ->
             it.player.inventory.add(item)
             it.chatNpc("I have rewarded you ${item.amount} ${item.getName(world.definitions)}.", animation = 568, npc = npcId, title = "${world.gameContext.name} Guide")
 
-    }
+    }*/
     it.player.unlock()
 }
